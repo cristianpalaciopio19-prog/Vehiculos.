@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set active = 'planillas' %}
+{% block heading %}Revisar lectura{% endblock %}
+{% block content %}
+<a href="{{ url_for('planillas') }}" class="back-btn"><i class="ti ti-arrow-left"></i> Planillas</a>
+<p style="font-size:12.5px; color:var(--text-tertiary); margin:10px 0 4px;">{{ nombre_archivo }}</p>
+
+{% if viajes|length == 0 %}
+  <div class="empty-state">
+    <i class="ti ti-mood-confuzed"></i>
+    <p>El OCR no detectó viajes legibles en este PDF.<br>Puedes registrar los viajes manualmente.</p>
+  </div>
+  <a href="{{ url_for('registro') }}" class="btn-primary" style="margin-top:14px;"><i class="ti ti-plus"></i> Registrar manualmente</a>
+{% else %}
+<form action="{{ url_for('confirmar_planilla', token=token) }}" method="post">
+  <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+    Se detectaron {{ viajes|length }} viaje(s). Revisa cada uno — las filas marcadas en rojo tienen baja confianza de lectura.
+  </p>
+
+  {% for v in viajes %}
+  <div class="card {{ 'alert' if v.confianza == 'baja' else '' }}">
+    <div class="checkbox-row" style="margin-bottom:10px;">
+      <input type="checkbox" name="incluir" value="{{ loop.index0 }}" id="chk_{{ loop.index0 }}" checked>
+      <label for="chk_{{ loop.index0 }}" style="font-size:12.5px; color:var(--text-secondary); font-weight:600;">
+        Incluir este registro · página {{ v.pagina }}
+        {% if v.confianza == 'baja' %}<span class="badge-confianza baja">revisar</span>{% endif %}
+      </label>
+    </div>
+
+    {% if v.confusion_posible %}
+    <div style="background:var(--terra-900); border-radius:8px; padding:8px 10px; margin-bottom:10px;">
+      <p style="font-size:11.5px; color:var(--terra-100);">
+        <i class="ti ti-alert-triangle" style="font-size:12px; vertical-align:-1px;"></i>
+        Posible confusión de placa: {{ v.confusion_posible[0] }} ↔ {{ v.confusion_posible[1] }}. Confirma cuál es correcta.
+      </p>
+    </div>
+    {% endif %}
+
+    <label class="field-label" style="margin-top:0;">Placa</label>
+    <input class="input mono" type="text" name="placa_{{ loop.index0 }}" value="{{ v.placa_canonica }}">
+
+    <label class="field-label">Ruta</label>
+    <select class="input" name="ruta_{{ loop.index0 }}">
+      <option value="">Sin detectar</option>
+      {% for r in rutas %}
+      <option value="{{ r }}" {{ 'selected' if r == v.ruta else '' }}>{{ r }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="field-label">Municipio</label>
+    <select class="input" name="municipio_{{ loop.index0 }}">
+      <option value="">Sin detectar</option>
+      {% for m in municipios %}
+      <option value="{{ m }}">{{ m }}</option>
+      {% endfor %}
+    </select>
+
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1;">
+        <label class="field-label">Fecha</label>
+        <input class="input" type="text" name="fecha_{{ loop.index0 }}" value="{{ v.fecha or '' }}" placeholder="dd/mm/aaaa">
+      </div>
+      <div style="flex:1;">
+        <label class="field-label">Km</label>
+        <input class="input mono" type="text" name="km_{{ loop.index0 }}" value="{{ v.km }}">
+      </div>
+    </div>
+
+    <p style="font-size:11px; color:var(--text-tertiary); margin-top:10px; font-family:var(--font-mono);">
+      texto leído: "{{ v.linea_origen }}"
+    </p>
+  </div>
+  {% endfor %}
+
+  <button type="submit" class="btn-primary" style="margin-top:8px;"><i class="ti ti-check"></i> Guardar en Excel</button>
+</form>
+{% endif %}
+{% endblock %}
