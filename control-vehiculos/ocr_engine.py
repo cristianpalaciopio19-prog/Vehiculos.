@@ -73,14 +73,21 @@ def preprocesar_imagen(img):
     return img
 
 
-def pdf_a_imagenes(pdf_path, dpi=300):
-    return convert_from_path(pdf_path, dpi=dpi)
+def pdf_a_imagenes(pdf_path, dpi=200):
+    return convert_from_path(pdf_path, dpi=dpi, thread_count=1)
+
+
+def contar_paginas(pdf_path):
+    from pdf2image.pdf2image import pdfinfo_from_path
+    info = pdfinfo_from_path(pdf_path)
+    return info.get('Pages', 1)
 
 
 def ocr_pagina(img):
     img_proc = preprocesar_imagen(img)
     config = '--oem 3 --psm 6'
     texto = pytesseract.image_to_string(img_proc, lang='eng', config=config)
+    del img_proc
     return texto
 
 
@@ -134,11 +141,23 @@ def extraer_viajes_de_texto(texto, pagina_num):
     return viajes
 
 
+MAX_PAGINAS = 15
+
+
 def procesar_pdf(pdf_path):
-    imagenes = pdf_a_imagenes(pdf_path)
+    total_paginas = contar_paginas(pdf_path)
+    paginas_a_procesar = min(total_paginas, MAX_PAGINAS)
     todos_viajes = []
-    for i, img in enumerate(imagenes, start=1):
+
+    for i in range(1, paginas_a_procesar + 1):
+        imagenes = convert_from_path(pdf_path, dpi=200, first_page=i, last_page=i, thread_count=1)
+        if not imagenes:
+            continue
+        img = imagenes[0]
         texto = ocr_pagina(img)
         viajes = extraer_viajes_de_texto(texto, i)
         todos_viajes.extend(viajes)
+        del img
+        del imagenes
+
     return todos_viajes
