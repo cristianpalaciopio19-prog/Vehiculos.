@@ -11,7 +11,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = 'set-colombina-control-vehiculos'
-app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
 RUTAS_TODAS = sorted(RUTAS_OPERATIVAS) + sorted(RUTAS_ADMINISTRATIVAS)
 
@@ -46,6 +46,9 @@ def subir_planilla():
 
     try:
         viajes_detectados = procesar_pdf(ruta_pdf)
+    except MemoryError:
+        flash('El PDF es muy grande para procesarlo en este servidor gratuito. Intenta con un PDF de menos páginas o más liviano.', 'error')
+        return redirect(url_for('planillas'))
     except Exception as e:
         flash(f'Error procesando el PDF: {e}', 'error')
         return redirect(url_for('planillas'))
@@ -171,4 +174,5 @@ def descargar_excel():
 
 if __name__ == '__main__':
     store.inicializar_excel()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
