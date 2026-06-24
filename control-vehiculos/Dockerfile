@@ -17,4 +17,4 @@ RUN mkdir -p data uploads
 
 EXPOSE 10000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--workers", "1", "--timeout", "180", "--max-requests", "20", "--max-requests-jitter", "5", "app:app"]
