@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+data/viajes.xlsx
+.git/
+*.zip
