@@ -1,9 +1,11 @@
 import os
+import io
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, flash
 
 import excel_store as store
 from datos_maestros import VEHICULOS, KM_POR_RUTA, datos_por_placa, semana_operativa
+from qr_generator import generar_qr_bytes
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -65,9 +67,12 @@ def registro():
         return redirect(url_for('lista_viajes'))
 
     hoy = datetime.now()
+    ruta_qr = request.args.get('ruta', '').strip().upper()
     return render_template('registro.html', rutas=RUTAS_TODAS, municipios=MUNICIPIOS, placas=PLACAS_CONOCIDAS,
                             fecha_hoy=hoy.strftime('%d/%m/%Y'),
-                            semana_hoy=f"Semana {semana_operativa(hoy.date())}")
+                            semana_hoy=f"Semana {semana_operativa(hoy.date())}",
+                            ruta_preseleccionada=ruta_qr if ruta_qr in RUTAS_TODAS else '',
+                            ruta_preseleccionada_placa='')
 
 
 @app.route('/viajes')
@@ -91,6 +96,18 @@ def eliminar_viaje(viaje_id):
     store.eliminar_viaje(viaje_id)
     flash('Viaje eliminado', 'success')
     return redirect(request.referrer or url_for('lista_viajes'))
+
+
+@app.route('/qr')
+def qr_codigos():
+    return render_template('qr.html', rutas=RUTAS_TODAS)
+
+
+@app.route('/qr/imagen/<ruta>')
+def qr_imagen(ruta):
+    url_destino = url_for('registro', ruta=ruta, _external=True)
+    png_bytes = generar_qr_bytes(url_destino)
+    return send_file(io.BytesIO(png_bytes), mimetype='image/png')
 
 
 @app.route('/descargar-excel')
