@@ -9,7 +9,7 @@ EXCEL_PATH = os.path.join(os.path.dirname(__file__), 'data', 'viajes.xlsx')
 COLUMNAS = [
     'ID', 'Fecha registro', 'Placa', 'Número interno', 'Ruta', 'Municipio',
     'Fecha viaje', 'Turno', 'Semana', 'Conductor', 'Kilómetros',
-    'Lleva/trae personal', 'Quién diligencia'
+    'Ingreso/Salida', 'Quién diligencia'
 ]
 
 CAMPOS = [

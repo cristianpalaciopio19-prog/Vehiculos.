@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, flash
 
 import excel_store as store
@@ -63,7 +64,8 @@ def registro():
         flash('Viaje guardado', 'success')
         return redirect(url_for('lista_viajes'))
 
-    return render_template('registro.html', rutas=RUTAS_TODAS, municipios=MUNICIPIOS, placas=PLACAS_CONOCIDAS)
+    return render_template('registro.html', rutas=RUTAS_TODAS, municipios=MUNICIPIOS, placas=PLACAS_CONOCIDAS,
+                            fecha_hoy=datetime.now().strftime('%d/%m/%Y'))
 
 
 @app.route('/viajes')
