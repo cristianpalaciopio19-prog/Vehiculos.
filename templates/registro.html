@@ -4,12 +4,12 @@
 {% block content %}
 <form action="{{ url_for('registro') }}" method="post" id="form-registro">
   <label class="field-label" style="margin-top:0;">Placa del vehículo</label>
-  <input class="input mono" type="text" name="placa" id="placa-input" list="placas-list" placeholder="Ej. ESZ696" required autocomplete="off">
-  <datalist id="placas-list">
+  <select class="input mono" name="placa" id="placa-input" required>
+    <option value="">Selecciona la placa...</option>
     {% for p in placas %}
-    <option value="{{ p }}"></option>
+    <option value="{{ p }}" {{ 'selected' if p == ruta_preseleccionada_placa else '' }}>{{ p }}</option>
     {% endfor %}
-  </datalist>
+  </select>
   <p id="placa-hint" style="font-size:11.5px; color:var(--olive-200); margin-top:6px; display:none;"></p>
 
   <label class="field-label">Número interno</label>
@@ -19,7 +19,7 @@
   <select class="input" name="ruta" id="ruta-select">
     <option value="">Selecciona...</option>
     {% for r in rutas %}
-    <option value="{{ r }}">{{ r }}</option>
+    <option value="{{ r }}" {{ 'selected' if r == ruta_preseleccionada else '' }}>{{ r }}</option>
     {% endfor %}
   </select>
 
@@ -40,9 +40,9 @@
       <label class="field-label">Turno</label>
       <select class="input" name="turno">
         <option value="">—</option>
-        <option value="6:AM a 2:PM">6:AM a 2:PM</option>
-        <option value="2:PM a 10:PM">2:PM a 10:PM</option>
-        <option value="10:PM a 6:AM">10:PM a 6:AM</option>
+        <option value="Turno 1">Turno 1</option>
+        <option value="Turno 2">Turno 2</option>
+        <option value="Turno 3">Turno 3</option>
         <option value="ADM">ADM</option>
       </select>
     </div>
@@ -84,7 +84,7 @@
 
   async function autocompletar() {
     const placa = placaInput.value.trim().toUpperCase();
-    if (placa.length < 5 || placa === ultimaPlacaBuscada) return;
+    if (!placa || placa === ultimaPlacaBuscada) return;
     ultimaPlacaBuscada = placa;
     try {
       const resp = await fetch(`/api/datos-placa/${placa}`);
@@ -104,7 +104,7 @@
   }
 
   placaInput.addEventListener('change', autocompletar);
-  placaInput.addEventListener('blur', autocompletar);
+  if (placaInput.value) autocompletar();
 
   // si cambian la ruta manualmente, ofrecer el km oficial si el campo está vacío
   rutaSelect.addEventListener('change', async () => {
@@ -115,6 +115,7 @@
       if (datos.km) kmInput.value = datos.km;
     } catch (e) { /* silencioso */ }
   });
+  if (rutaSelect.value && !kmInput.value) rutaSelect.dispatchEvent(new Event('change'));
 
   const chips = document.querySelectorAll('.chip-group .chip');
   const hiddenLT = document.getElementById('lleva-trae-hidden');

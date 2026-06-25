@@ -29,6 +29,15 @@
     <i class="ti ti-chevron-right" style="color:var(--text-tertiary);"></i>
   </div>
 </a>
+<a href="{{ url_for('qr_codigos') }}" class="card tappable">
+  <div class="row">
+    <div>
+      <p style="font-weight:600; font-size:14px;">Códigos QR por ruta</p>
+      <p style="font-size:12px; color:var(--text-tertiary); margin-top:2px;">Genera el QR para pegar en cada bus</p>
+    </div>
+    <i class="ti ti-chevron-right" style="color:var(--text-tertiary);"></i>
+  </div>
+</a>
 
 <div class="section-label">Últimos viajes guardados</div>
 {% if viajes %}
