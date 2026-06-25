@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 import excel_store as store
 from datos_maestros import (
     VEHICULOS, KM_POR_RUTA, datos_por_placa, semana_operativa,
-    datos_por_ruta, es_ruta_administrativa, RUTAS_ADMINISTRATIVAS
+    datos_por_ruta, es_ruta_administrativa, RUTAS_ADMINISTRATIVAS, ahora_colombia
 )
 from qr_generator import generar_qr_bytes
 
@@ -35,6 +35,15 @@ def api_datos_placa(placa):
 @app.route('/api/km-ruta/<ruta>')
 def api_km_ruta(ruta):
     return jsonify({'km': KM_POR_RUTA.get(ruta.strip().upper(), '')})
+
+
+@app.route('/api/diagnostico-hora')
+def diagnostico_hora():
+    import datetime as dt
+    return jsonify({
+        'hora_colombia_calculada': ahora_colombia().strftime('%d/%m/%Y %H:%M:%S'),
+        'hora_servidor_sin_tz': dt.datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+    })
 
 
 @app.route('/api/datos-ruta/<ruta>')
@@ -82,7 +91,7 @@ def registro():
         flash('Viaje guardado', 'success')
         return redirect(url_for('lista_viajes'))
 
-    hoy = datetime.now()
+    hoy = ahora_colombia()
     ruta_qr = request.args.get('ruta', '').strip().upper()
     datos_qr = {}
     es_qr_valido = ruta_qr in RUTAS_TODAS
