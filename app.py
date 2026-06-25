@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, flash
 
 import excel_store as store
-from datos_maestros import VEHICULOS, KM_POR_RUTA, datos_por_placa
+from datos_maestros import VEHICULOS, KM_POR_RUTA, datos_por_placa, semana_operativa
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -64,8 +64,10 @@ def registro():
         flash('Viaje guardado', 'success')
         return redirect(url_for('lista_viajes'))
 
+    hoy = datetime.now()
     return render_template('registro.html', rutas=RUTAS_TODAS, municipios=MUNICIPIOS, placas=PLACAS_CONOCIDAS,
-                            fecha_hoy=datetime.now().strftime('%d/%m/%Y'))
+                            fecha_hoy=hoy.strftime('%d/%m/%Y'),
+                            semana_hoy=f"Semana {semana_operativa(hoy.date())}")
 
 
 @app.route('/viajes')

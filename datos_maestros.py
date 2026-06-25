@@ -1,5 +1,6 @@
 # Datos maestros: vehículos fijos, conductores, rutas habituales y kilómetros oficiales.
 # Fuente: Programación_fija.xlsx (hoja COLOMBINA FIJOS) y KILOMETRAJE_RUTAS.xlsx
+from datetime import date
 
 # placa -> {conductor, ruta_habitual, numero_interno, municipio}
 VEHICULOS = {
@@ -66,3 +67,15 @@ def datos_por_placa(placa):
 
 def km_de_ruta(ruta):
     return KM_POR_RUTA.get((ruta or '').strip().upper(), '')
+
+
+# Ancla del Calendario Oficial Colombina 2026: domingo 28 dic 2025 = inicio de la Semana 1
+ANCLA_SEMANA_1 = date(2025, 12, 28)
+
+
+def semana_operativa(fecha=None):
+    """Calcula el número de semana operativa (Calendario Colombina 2026) para una fecha dada."""
+    if fecha is None:
+        fecha = date.today()
+    dias = (fecha - ANCLA_SEMANA_1).days
+    return (dias // 7) + 1
