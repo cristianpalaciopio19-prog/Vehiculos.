@@ -69,6 +69,39 @@ def km_de_ruta(ruta):
     return KM_POR_RUTA.get((ruta or '').strip().upper(), '')
 
 
+# Rutas administrativas (un solo sentido, solo "Ingreso"). Todo lo demás es operativo (Ingreso/Salida).
+RUTAS_ADMINISTRATIVAS = {'CASA DE LA CULTURA', 'ADM Z', 'ADM R', 'ADM T'}
+
+# Municipio de rutas administrativas sin vehículo fijo asignado (rotan según necesidad)
+MUNICIPIO_ADM = {'ADM Z': 'Zarzal', 'ADM R': 'Roldanillo', 'ADM T': 'Tuluá'}
+
+
+def es_ruta_administrativa(ruta):
+    return (ruta or '').strip().upper() in RUTAS_ADMINISTRATIVAS
+
+
+def datos_por_ruta(ruta):
+    """Devuelve el vehículo típico (placa, conductor, número interno, municipio) y km de una ruta."""
+    ruta_norm = (ruta or '').strip().upper()
+    vehiculo_encontrado = None
+    placa_encontrada = ''
+    for placa, info in VEHICULOS.items():
+        if info.get('ruta', '').strip().upper() == ruta_norm:
+            vehiculo_encontrado = info
+            placa_encontrada = placa
+            break
+    if not vehiculo_encontrado:
+        vehiculo_encontrado = {}
+    return {
+        'placa': placa_encontrada,
+        'conductor': vehiculo_encontrado.get('conductor', ''),
+        'numero_interno': vehiculo_encontrado.get('numero_interno', ''),
+        'municipio': vehiculo_encontrado.get('municipio', '') or MUNICIPIO_ADM.get(ruta_norm, ''),
+        'km': KM_POR_RUTA.get(ruta_norm, ''),
+        'es_administrativa': es_ruta_administrativa(ruta_norm),
+    }
+
+
 # Ancla del Calendario Oficial Colombina 2026: domingo 28 dic 2025 = inicio de la Semana 1
 ANCLA_SEMANA_1 = date(2025, 12, 28)
 
