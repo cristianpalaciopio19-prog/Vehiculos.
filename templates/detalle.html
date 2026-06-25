@@ -31,7 +31,7 @@
     </div>
     {% if v.semana %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:4px;">{{ v.semana }}{% if v.turno %} · {{ v.turno }}{% endif %}</p>{% endif %}
     {% if v.conductor %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:2px;">Conductor: {{ v.conductor }}</p>{% endif %}
-    {% if v.lleva_trae_personal %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:2px;">{{ v.lleva_trae_personal }} personal</p>{% endif %}
+    {% if v.lleva_trae_personal %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:2px;">{{ v.lleva_trae_personal }}</p>{% endif %}
     {% if v.quien_diligencia %}<p style="font-size:11px; color:var(--text-tertiary); margin-top:2px;">Diligenciado por: {{ v.quien_diligencia }}</p>{% endif %}
   </div>
   {% endfor %}

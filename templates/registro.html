@@ -34,14 +34,16 @@
   <div style="display:flex; gap:10px;">
     <div style="flex:1;">
       <label class="field-label">Fecha</label>
-      <input class="input" type="text" name="fecha" placeholder="dd/mm/aaaa">
+      <input class="input" type="text" name="fecha" value="{{ fecha_hoy }}" readonly>
     </div>
     <div style="flex:1;">
       <label class="field-label">Turno</label>
       <select class="input" name="turno">
         <option value="">—</option>
-        <option value="AM">AM</option>
-        <option value="PM">PM</option>
+        <option value="6:AM a 2:PM">6:AM a 2:PM</option>
+        <option value="2:PM a 10:PM">2:PM a 10:PM</option>
+        <option value="10:PM a 6:AM">10:PM a 6:AM</option>
+        <option value="ADM">ADM</option>
       </select>
     </div>
   </div>
@@ -55,10 +57,10 @@
   <label class="field-label">Kilómetros recorridos</label>
   <input class="input mono" type="text" name="km" id="km-input" placeholder="Ej. 38.0" required>
 
-  <label class="field-label">¿Lleva o trae personal?</label>
+  <label class="field-label">¿Ingreso o salida?</label>
   <div class="chip-group">
-    <span class="chip" data-value="Lleva">Lleva</span>
-    <span class="chip" data-value="Trae">Trae</span>
+    <span class="chip" data-value="Ingreso">Ingreso</span>
+    <span class="chip" data-value="Salida">Salida</span>
     <span class="chip" data-value="">No aplica</span>
   </div>
   <input type="hidden" name="lleva_trae_personal" id="lleva-trae-hidden">
