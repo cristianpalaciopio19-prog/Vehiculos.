@@ -1,6 +1,14 @@
 # Datos maestros: vehículos fijos, conductores, rutas habituales y kilómetros oficiales.
 # Fuente: Programación_fija.xlsx (hoja COLOMBINA FIJOS) y KILOMETRAJE_RUTAS.xlsx
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
+
+ZONA_COLOMBIA = ZoneInfo('America/Bogota')
+
+
+def ahora_colombia():
+    """Devuelve la fecha y hora actual en la zona horaria de Colombia, sin importar dónde corra el servidor."""
+    return datetime.now(ZONA_COLOMBIA)
 
 # placa -> {conductor, ruta_habitual, numero_interno, municipio}
 VEHICULOS = {
@@ -109,6 +117,6 @@ ANCLA_SEMANA_1 = date(2025, 12, 28)
 def semana_operativa(fecha=None):
     """Calcula el número de semana operativa (Calendario Colombina 2026) para una fecha dada."""
     if fecha is None:
-        fecha = date.today()
+        fecha = ahora_colombia().date()
     dias = (fecha - ANCLA_SEMANA_1).days
     return (dias // 7) + 1
