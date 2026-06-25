@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active = 'inicio' %}
+{% block heading %}Códigos QR por ruta{% endblock %}
+{% block content %}
+<p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.5;">
+  Pega el QR de cada ruta en el bus correspondiente. Al escanearlo, se abre el formulario de registro con la ruta ya seleccionada.
+</p>
+
+<label class="field-label" style="margin-top:0;">Selecciona una ruta</label>
+<select class="input" id="ruta-select-qr">
+  <option value="">Elige una ruta...</option>
+  {% for r in rutas %}
+  <option value="{{ r }}">{{ r }}</option>
+  {% endfor %}
+</select>
+
+<div id="qr-contenedor" style="display:none; text-align:center; margin-top:20px;">
+  <div class="card" style="display:inline-block; padding:20px;">
+    <img id="qr-img" src="" alt="Código QR" style="width:220px; height:220px;">
+    <p id="qr-label" style="font-size:13px; font-weight:700; margin-top:10px; color:var(--text-primary);"></p>
+  </div>
+  <a id="qr-descargar" href="" download="" class="btn-secondary" style="margin-top:14px;">
+    <i class="ti ti-download"></i> Descargar imagen
+  </a>
+</div>
+
+<script>
+  const select = document.getElementById('ruta-select-qr');
+  const contenedor = document.getElementById('qr-contenedor');
+  const img = document.getElementById('qr-img');
+  const label = document.getElementById('qr-label');
+  const descargar = document.getElementById('qr-descargar');
+
+  select.addEventListener('change', () => {
+    const ruta = select.value;
+    if (!ruta) { contenedor.style.display = 'none'; return; }
+    const url = `/qr/imagen/${encodeURIComponent(ruta)}`;
+    img.src = url;
+    label.textContent = `Ruta ${ruta}`;
+    descargar.href = url;
+    descargar.download = `qr-ruta-${ruta}.png`;
+    contenedor.style.display = 'block';
+  });
+</script>
+{% endblock %}
