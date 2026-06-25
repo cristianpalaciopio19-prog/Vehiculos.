@@ -2,30 +2,38 @@
 {% set active = 'inicio' %}
 {% block heading %}Panel general{% endblock %}
 {% block content %}
+<div class="card" style="background:var(--bg-surface-2); border-color:var(--olive-600); margin-bottom:16px;">
+  <div class="row" style="margin-bottom:6px;">
+    <span style="font-size:12.5px; font-weight:700; color:var(--olive-200);">Recuerda descargar tu respaldo</span>
+    <i class="ti ti-cloud-download" style="color:var(--olive-200);"></i>
+  </div>
+  <p style="font-size:12px; color:var(--text-secondary); line-height:1.5;">Este servidor gratuito puede reiniciarse por inactividad y perder los datos. Descarga el Excel cada vez que termines de registrar viajes.</p>
+  <a href="{{ url_for('descargar_excel') }}" class="btn-primary" style="margin-top:10px; padding:10px;"><i class="ti ti-download"></i> Descargar respaldo ahora</a>
+</div>
+
 <div class="stat-row">
   <div class="stat"><div class="label">Viajes registrados</div><div class="value">{{ resumen.total_viajes }}</div></div>
   <div class="stat"><div class="label">Km totales</div><div class="value">{{ resumen.total_km }}<span class="unit">km</span></div></div>
 </div>
 <div class="stat-row">
   <div class="stat"><div class="label">Placas distintas</div><div class="value">{{ resumen.placas_distintas }}</div></div>
-  <div class="stat"><div class="label">Por revisar</div><div class="value">{{ resumen.pendientes_revision }}</div></div>
 </div>
 
 <div class="section-label">Acciones rápidas</div>
-<a href="{{ url_for('planillas') }}" class="card tappable">
+<a href="{{ url_for('registro') }}" class="card tappable">
   <div class="row">
     <div>
-      <p style="font-weight:600; font-size:14px;">Cargar planilla PDF</p>
-      <p style="font-size:12px; color:var(--text-tertiary); margin-top:2px;">Lectura automática con OCR</p>
+      <p style="font-weight:600; font-size:14px;">Registrar viaje</p>
+      <p style="font-size:12px; color:var(--text-tertiary); margin-top:2px;">Placa, ruta, km y datos del viaje</p>
     </div>
     <i class="ti ti-chevron-right" style="color:var(--text-tertiary);"></i>
   </div>
 </a>
-<a href="{{ url_for('registro') }}" class="card tappable">
+<a href="{{ url_for('qr_codigos') }}" class="card tappable">
   <div class="row">
     <div>
-      <p style="font-weight:600; font-size:14px;">Registrar viaje manual</p>
-      <p style="font-size:12px; color:var(--text-tertiary); margin-top:2px;">Sin pasar por PDF</p>
+      <p style="font-weight:600; font-size:14px;">Códigos QR por ruta</p>
+      <p style="font-size:12px; color:var(--text-tertiary); margin-top:2px;">Genera el QR para pegar en cada bus</p>
     </div>
     <i class="ti ti-chevron-right" style="color:var(--text-tertiary);"></i>
   </div>
@@ -37,18 +45,18 @@
   <a href="{{ url_for('detalle_vehiculo', placa=v.placa) }}" class="card tappable">
     <div class="row">
       <span class="plate">{{ v.placa }}</span>
-      <span class="route-tag {{ 'adm' if v.factor == 1 else '' }}">{{ v.ruta or '—' }}</span>
+      <span class="route-tag">{{ v.ruta or '—' }}</span>
     </div>
     <div class="row" style="margin-top:8px;">
       <span style="font-size:12.5px; color:var(--text-tertiary);">{{ v.municipio or 'Sin municipio' }} · {{ v.km }} km</span>
-      <span class="factor-badge {{ 'factor-2' if v.factor == 2 else 'factor-1' }}">× {{ v.factor }}</span>
+      {% if v.numero_interno %}<span style="font-size:11.5px; color:var(--text-tertiary); font-family:var(--font-mono);">#{{ v.numero_interno }}</span>{% endif %}
     </div>
   </a>
   {% endfor %}
 {% else %}
   <div class="empty-state">
     <i class="ti ti-route-2"></i>
-    <p>Todavía no hay viajes registrados.<br>Carga una planilla o registra uno manualmente.</p>
+    <p>Todavía no hay viajes registrados.<br>Registra el primero desde "Registrar viaje".</p>
   </div>
 {% endif %}
 

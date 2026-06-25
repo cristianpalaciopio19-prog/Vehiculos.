@@ -1,21 +1,23 @@
 import os
-import uuid
+import io
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, flash
 
-from ocr_engine import procesar_pdf, RUTAS_OPERATIVAS, RUTAS_ADMINISTRATIVAS, MUNICIPIOS, factor_facturacion
 import excel_store as store
+from datos_maestros import (
+    VEHICULOS, KM_POR_RUTA, datos_por_placa, semana_operativa,
+    datos_por_ruta, es_ruta_administrativa, RUTAS_ADMINISTRATIVAS, ahora_colombia
+)
+from qr_generator import generar_qr_bytes
 
 BASE_DIR = os.path.dirname(__file__)
-UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = 'set-colombina-control-vehiculos'
-app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
-RUTAS_TODAS = sorted(RUTAS_OPERATIVAS) + sorted(RUTAS_ADMINISTRATIVAS)
-
-PENDIENTES = {}
+RUTAS_TODAS = sorted(KM_POR_RUTA.keys()) + ['CASA DE LA CULTURA', 'REFUERZO ZARZAL', 'ADM Z', 'ADM R', 'ADM T']
+MUNICIPIOS = ['Tuluá', 'La Paila', 'Andalucía', 'Zarzal', 'Bugalagrande', 'Roldanillo']
+PLACAS_CONOCIDAS = sorted(VEHICULOS.keys())
 
 
 @app.route('/')
@@ -25,122 +27,81 @@ def inicio():
     return render_template('inicio.html', resumen=resumen, viajes=viajes_recientes)
 
 
-@app.route('/planillas')
-def planillas():
-    return render_template('planillas.html')
+@app.route('/api/datos-placa/<placa>')
+def api_datos_placa(placa):
+    return jsonify(datos_por_placa(placa))
 
 
-@app.route('/planillas/subir', methods=['POST'])
-def subir_planilla():
-    archivo = request.files.get('pdf')
-    if not archivo or archivo.filename == '':
-        flash('Selecciona un archivo PDF', 'error')
-        return redirect(url_for('planillas'))
-    if not archivo.filename.lower().endswith('.pdf'):
-        flash('El archivo debe ser PDF', 'error')
-        return redirect(url_for('planillas'))
-
-    token = uuid.uuid4().hex[:10]
-    ruta_pdf = os.path.join(UPLOAD_DIR, f'{token}.pdf')
-    archivo.save(ruta_pdf)
-
-    try:
-        viajes_detectados = procesar_pdf(ruta_pdf)
-    except MemoryError:
-        flash('El PDF es muy grande para procesarlo en este servidor gratuito. Intenta con un PDF de menos páginas o más liviano.', 'error')
-        return redirect(url_for('planillas'))
-    except Exception as e:
-        flash(f'Error procesando el PDF: {e}', 'error')
-        return redirect(url_for('planillas'))
-
-    PENDIENTES[token] = {
-        'nombre_archivo': archivo.filename,
-        'viajes': viajes_detectados,
-    }
-    return redirect(url_for('revisar_planilla', token=token))
+@app.route('/api/km-ruta/<ruta>')
+def api_km_ruta(ruta):
+    return jsonify({'km': KM_POR_RUTA.get(ruta.strip().upper(), '')})
 
 
-@app.route('/planillas/revisar/<token>')
-def revisar_planilla(token):
-    datos = PENDIENTES.get(token)
-    if not datos:
-        flash('Esa planilla ya no está disponible, vuelve a subirla', 'error')
-        return redirect(url_for('planillas'))
-    return render_template(
-        'revisar.html',
-        token=token,
-        nombre_archivo=datos['nombre_archivo'],
-        viajes=datos['viajes'],
-        rutas=RUTAS_TODAS,
-        municipios=MUNICIPIOS,
-    )
-
-
-@app.route('/planillas/confirmar/<token>', methods=['POST'])
-def confirmar_planilla(token):
-    datos = PENDIENTES.get(token)
-    if not datos:
-        flash('Esa planilla ya no está disponible', 'error')
-        return redirect(url_for('planillas'))
-
-    indices = request.form.getlist('incluir')
-    guardados = 0
-    for idx in indices:
-        i = int(idx)
-        placa = request.form.get(f'placa_{i}', '').strip().upper()
-        ruta = request.form.get(f'ruta_{i}', '').strip()
-        municipio = request.form.get(f'municipio_{i}', '').strip()
-        fecha = request.form.get(f'fecha_{i}', '').strip()
-        km_raw = request.form.get(f'km_{i}', '').strip()
-        if not placa or not km_raw:
-            continue
-        try:
-            km = float(km_raw)
-        except ValueError:
-            continue
-        factor = factor_facturacion(ruta)
-        store.agregar_viaje(
-            placa=placa, ruta=ruta, municipio=municipio, fecha_viaje=fecha,
-            turno='', conductor='', km=km, factor=factor,
-            origen=f"PDF:{datos['nombre_archivo']}", confianza='revisado'
-        )
-        guardados += 1
-
-    del PENDIENTES[token]
-    flash(f'{guardados} viaje(s) guardado(s) en el Excel', 'success')
-    return redirect(url_for('lista_viajes'))
+@app.route('/api/datos-ruta/<ruta>')
+def api_datos_ruta(ruta):
+    return jsonify(datos_por_ruta(ruta))
 
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
         placa = request.form.get('placa', '').strip().upper()
+        numero_interno = request.form.get('numero_interno', '').strip()
         ruta = request.form.get('ruta', '').strip()
         municipio = request.form.get('municipio', '').strip()
         fecha = request.form.get('fecha', '').strip()
         turno = request.form.get('turno', '').strip()
+        semana = request.form.get('semana', '').strip()
         conductor = request.form.get('conductor', '').strip()
         km_raw = request.form.get('km', '').strip()
+        lleva_trae = request.form.get('lleva_trae_personal', '').strip()
+        quien_diligencia = request.form.get('quien_diligencia', '').strip()
 
-        if not placa or not km_raw:
-            flash('Placa y kilómetros son obligatorios', 'error')
-            return redirect(url_for('registro'))
-        try:
-            km = float(km_raw)
-        except ValueError:
-            flash('Kilómetros debe ser un número', 'error')
+        if not placa:
+            flash('La placa es obligatoria', 'error')
             return redirect(url_for('registro'))
 
-        factor = factor_facturacion(ruta)
+        if not km_raw:
+            if es_ruta_administrativa(ruta):
+                km = 0
+            else:
+                flash('Kilómetros es obligatorio para rutas operativas', 'error')
+                return redirect(url_for('registro'))
+        else:
+            try:
+                km = float(km_raw)
+            except ValueError:
+                flash('Kilómetros debe ser un número', 'error')
+                return redirect(url_for('registro'))
+
         store.agregar_viaje(
-            placa=placa, ruta=ruta, municipio=municipio, fecha_viaje=fecha,
-            turno=turno, conductor=conductor, km=km, factor=factor,
-            origen='manual', confianza=''
+            placa=placa, numero_interno=numero_interno, ruta=ruta, municipio=municipio,
+            fecha_viaje=fecha, turno=turno, semana=semana, conductor=conductor, km=km,
+            lleva_trae_personal=lleva_trae, quien_diligencia=quien_diligencia
         )
         flash('Viaje guardado', 'success')
         return redirect(url_for('lista_viajes'))
 
-    return render_template('registro.html', rutas=RUTAS_TODAS, municipios=MUNICIPIOS)
+    hoy = ahora_colombia()
+    ruta_qr = request.args.get('ruta', '').strip().upper()
+    datos_qr = {}
+    es_qr_valido = ruta_qr in RUTAS_TODAS
+    if es_qr_valido:
+        datos_qr = datos_por_ruta(ruta_qr)
+
+    return render_template(
+        'registro.html', rutas=RUTAS_TODAS, municipios=MUNICIPIOS, placas=PLACAS_CONOCIDAS,
+        fecha_hoy=hoy.strftime('%d/%m/%Y'),
+        semana_hoy=f"Semana {semana_operativa(hoy.date())}",
+        desde_qr=es_qr_valido,
+        ruta_preseleccionada=ruta_qr if es_qr_valido else '',
+        placa_preseleccionada=datos_qr.get('placa', ''),
+        conductor_preseleccionado=datos_qr.get('conductor', ''),
+        numero_interno_preseleccionado=datos_qr.get('numero_interno', ''),
+        municipio_preseleccionado=datos_qr.get('municipio', ''),
+        km_preseleccionado=datos_qr.get('km', ''),
+        es_administrativa=datos_qr.get('es_administrativa', False),
+    )
 
 
 @app.route('/viajes')
@@ -164,6 +125,18 @@ def eliminar_viaje(viaje_id):
     store.eliminar_viaje(viaje_id)
     flash('Viaje eliminado', 'success')
     return redirect(request.referrer or url_for('lista_viajes'))
+
+
+@app.route('/qr')
+def qr_codigos():
+    return render_template('qr.html', rutas=RUTAS_TODAS)
+
+
+@app.route('/qr/imagen/<ruta>')
+def qr_imagen(ruta):
+    url_destino = url_for('registro', ruta=ruta, _external=True)
+    png_bytes = generar_qr_bytes(url_destino)
+    return send_file(io.BytesIO(png_bytes), mimetype='image/png')
 
 
 @app.route('/descargar-excel')

@@ -18,8 +18,8 @@
   {% for v in viajes %}
   <div class="card">
     <div class="row">
-      <span class="route-tag {{ 'adm' if v.factor == 1 else '' }}">{{ v.ruta or 'Sin ruta' }}</span>
-      <span class="factor-badge {{ 'factor-2' if v.factor == 2 else 'factor-1' }}">× {{ v.factor }}</span>
+      <span class="route-tag">{{ v.ruta or 'Sin ruta' }}</span>
+      {% if v.numero_interno %}<span style="font-size:11.5px; color:var(--text-tertiary); font-family:var(--font-mono);">#{{ v.numero_interno }}</span>{% endif %}
     </div>
     <div class="row" style="margin-top:8px;">
       <span style="font-size:12.5px; color:var(--text-tertiary);">
@@ -29,7 +29,10 @@
         <button type="submit" class="btn-danger-link">Eliminar</button>
       </form>
     </div>
-    {% if v.conductor %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:4px;">Conductor: {{ v.conductor }}</p>{% endif %}
+    {% if v.semana %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:4px;">{{ v.semana }}{% if v.turno %} · {{ v.turno }}{% endif %}</p>{% endif %}
+    {% if v.conductor %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:2px;">Conductor: {{ v.conductor }}</p>{% endif %}
+    {% if v.lleva_trae_personal %}<p style="font-size:11.5px; color:var(--text-tertiary); margin-top:2px;">{{ v.lleva_trae_personal }}</p>{% endif %}
+    {% if v.quien_diligencia %}<p style="font-size:11px; color:var(--text-tertiary); margin-top:2px;">Diligenciado por: {{ v.quien_diligencia }}</p>{% endif %}
   </div>
   {% endfor %}
 {% else %}

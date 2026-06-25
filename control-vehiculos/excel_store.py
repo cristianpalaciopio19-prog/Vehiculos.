@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from datos_maestros import ahora_colombia
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
@@ -7,14 +8,20 @@ from openpyxl.utils import get_column_letter
 EXCEL_PATH = os.path.join(os.path.dirname(__file__), 'data', 'viajes.xlsx')
 
 COLUMNAS = [
-    'ID', 'Fecha registro', 'Placa', 'Ruta', 'Municipio', 'Fecha viaje',
-    'Turno', 'Conductor', 'Kilómetros', 'Factor', 'Origen', 'Confianza OCR'
+    'ID', 'Fecha registro', 'Placa', 'Número interno', 'Ruta', 'Municipio',
+    'Fecha viaje', 'Turno', 'Semana', 'Conductor', 'Kilómetros',
+    'Ingreso/Salida', 'Quién diligencia'
+]
+
+CAMPOS = [
+    'id', 'fecha_registro', 'placa', 'numero_interno', 'ruta', 'municipio',
+    'fecha_viaje', 'turno', 'semana', 'conductor', 'km',
+    'lleva_trae_personal', 'quien_diligencia'
 ]
 
 HEADER_FILL = PatternFill('solid', start_color='3B6D11')
 HEADER_FONT = Font(color='FFFFFF', bold=True, name='Arial', size=11)
 CELL_FONT = Font(name='Arial', size=10)
-ALERT_FILL = PatternFill('solid', start_color='FAECE7')
 
 
 def inicializar_excel():
@@ -30,7 +37,7 @@ def inicializar_excel():
         cell.fill = HEADER_FILL
         cell.font = HEADER_FONT
         cell.alignment = Alignment(horizontal='center')
-    anchos = [6, 16, 12, 10, 14, 14, 8, 20, 12, 8, 10, 12]
+    anchos = [6, 16, 10, 12, 10, 14, 12, 8, 10, 20, 11, 16, 18]
     for i, ancho in enumerate(anchos, start=1):
         sheet.column_dimensions[get_column_letter(i)].width = ancho
     sheet.freeze_panes = 'A2'
@@ -45,24 +52,22 @@ def siguiente_id(sheet):
     return max_id + 1
 
 
-def agregar_viaje(placa, ruta, municipio, fecha_viaje, turno, conductor, km, factor, origen='manual', confianza=''):
+def agregar_viaje(placa, numero_interno, ruta, municipio, fecha_viaje, turno, semana,
+                   conductor, km, lleva_trae_personal, quien_diligencia):
     inicializar_excel()
     wb = load_workbook(EXCEL_PATH)
     sheet = wb['Viajes']
     nuevo_id = siguiente_id(sheet)
     fila = [
         nuevo_id,
-        datetime.now().strftime('%d/%m/%Y %H:%M'),
-        placa, ruta, municipio, fecha_viaje, turno, conductor,
-        km, factor, origen, confianza
+        ahora_colombia().strftime('%d/%m/%Y %H:%M'),
+        placa, numero_interno, ruta, municipio, fecha_viaje, turno, semana,
+        conductor, km, lleva_trae_personal, quien_diligencia
     ]
     sheet.append(fila)
     row_idx = sheet.max_row
     for col_idx in range(1, len(COLUMNAS) + 1):
         sheet.cell(row=row_idx, column=col_idx).font = CELL_FONT
-    if confianza == 'baja':
-        for col_idx in range(1, len(COLUMNAS) + 1):
-            sheet.cell(row=row_idx, column=col_idx).fill = ALERT_FILL
     wb.save(EXCEL_PATH)
     return nuevo_id
 
@@ -75,11 +80,7 @@ def listar_viajes(filtro_placa=None, filtro_municipio=None):
     for row in sheet.iter_rows(min_row=2, values_only=True):
         if not row[0]:
             continue
-        viaje = dict(zip(
-            ['id', 'fecha_registro', 'placa', 'ruta', 'municipio', 'fecha_viaje',
-             'turno', 'conductor', 'km', 'factor', 'origen', 'confianza'],
-            row
-        ))
+        viaje = dict(zip(CAMPOS, row))
         if filtro_placa and filtro_placa.upper() not in (viaje['placa'] or '').upper():
             continue
         if filtro_municipio and filtro_municipio != viaje['municipio']:
@@ -113,5 +114,4 @@ def resumen():
         'total_viajes': len(viajes),
         'placas_distintas': len(placas),
         'total_km': round(total_km, 1),
-        'pendientes_revision': sum(1 for v in viajes if v['confianza'] == 'baja'),
     }
