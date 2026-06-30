@@ -151,7 +151,9 @@ def qr_imagen(ruta):
 @app.route('/descargar-excel')
 def descargar_excel():
     store.inicializar_excel()
-    return send_file(store.EXCEL_PATH, as_attachment=True, download_name='viajes_control_vehiculos.xlsx')
+    fecha_hoy = ahora_colombia().strftime('%d-%m-%Y')
+    nombre_archivo = f'Control de vehiculos {fecha_hoy}.xlsx'
+    return send_file(store.EXCEL_PATH, as_attachment=True, download_name=nombre_archivo)
 
 
 if __name__ == '__main__':
