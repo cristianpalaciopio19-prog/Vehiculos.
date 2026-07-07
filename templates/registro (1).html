@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% set active = 'registro' %}
+{% block heading %}Registrar viaje{% endblock %}
+{% block content %}
+
+{% if desde_qr %}
+<div class="card" style="background:var(--olive-50); border-color:var(--olive-200); margin-bottom:16px;">
+  <div class="row">
+    <span style="font-size:13px; font-weight:700; color:var(--olive-600);"><i class="ti ti-qrcode" style="vertical-align:-2px;"></i> Escaneado desde QR</span>
+  </div>
+  <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Revisa los datos de la ruta {{ ruta_preseleccionada }} y guarda.</p>
+</div>
+{% endif %}
+
+<form action="{{ url_for('registro') }}" method="post" id="form-registro">
+  <label class="field-label" style="margin-top:0;">Placa del vehículo</label>
+  <select class="input mono" name="placa" id="placa-input" required>
+    <option value="">Selecciona la placa...</option>
+    {% for p in placas %}
+    <option value="{{ p }}" {{ 'selected' if p == placa_preseleccionada else '' }}>{{ p }}</option>
+    {% endfor %}
+  </select>
+  <p id="placa-hint" style="font-size:11.5px; color:var(--olive-200); margin-top:6px; display:none;"></p>
+
+  <label class="field-label">Número interno</label>
+  <input class="input mono" type="text" name="numero_interno" id="numero-interno-input" placeholder="Ej. 439" value="{{ numero_interno_preseleccionado }}">
+
+  <label class="field-label">Ruta</label>
+  <select class="input" name="ruta" id="ruta-select" data-adm="{{ 'true' if es_administrativa else 'false' }}">
+    <option value="">Selecciona...</option>
+    {% for r in rutas %}
+    <option value="{{ r }}" {{ 'selected' if r == ruta_preseleccionada else '' }}>{{ r }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="field-label">Municipio</label>
+  <select class="input" name="municipio" id="municipio-select">
+    <option value="">Selecciona...</option>
+    {% for m in municipios %}
+    <option value="{{ m }}" {{ 'selected' if m == municipio_preseleccionado else '' }}>{{ m }}</option>
+    {% endfor %}
+  </select>
+
+  <div style="display:flex; gap:10px;">
+    <div style="flex:1;">
+      <label class="field-label">Fecha</label>
+      <input class="input" type="text" name="fecha" value="{{ fecha_hoy }}" readonly>
+    </div>
+    <div style="flex:1;">
+      <label class="field-label">Turno</label>
+      <select class="input" name="turno">
+        <option value="">—</option>
+        <option value="Turno 1">Turno 1</option>
+        <option value="Turno 2">Turno 2</option>
+        <option value="Turno 3">Turno 3</option>
+        <option value="ADM">ADM</option>
+      </select>
+    </div>
+  </div>
+
+  <label class="field-label">Semana</label>
+  <input class="input" type="text" name="semana" value="{{ semana_hoy }}" readonly>
+
+  <label class="field-label">Conductor</label>
+  <input class="input" type="text" name="conductor" id="conductor-input" placeholder="Nombre del conductor" value="{{ conductor_preseleccionado }}">
+
+  <label class="field-label">Kilómetros recorridos</label>
+  <input class="input mono" type="text" name="km" id="km-input" placeholder="Ej. 38.0" value="{{ km_preseleccionado }}">
+
+  <div id="ingreso-salida-block">
+    <label class="field-label" id="ingreso-salida-label">¿Ingreso o salida?</label>
+    <div class="chip-group" id="chip-group-is">
+      <span class="chip" data-value="Ingreso">Ingreso</span>
+      <span class="chip" data-value="Salida">Salida</span>
+      <span class="chip" data-value="">No aplica</span>
+    </div>
+  </div>
+  <input type="hidden" name="lleva_trae_personal" id="lleva-trae-hidden" value="">
+
+  <label class="field-label">Quién diligencia</label>
+  <input class="input" type="text" name="quien_diligencia" placeholder="Tu nombre">
+
+  <button type="submit" class="btn-primary" style="margin-top:18px;"><i class="ti ti-check"></i> Guardar viaje</button>
+</form>
+
+<script>
+  const placaInput = document.getElementById('placa-input');
+  const placaHint = document.getElementById('placa-hint');
+  const numeroInternoInput = document.getElementById('numero-interno-input');
+  const rutaSelect = document.getElementById('ruta-select');
+  const municipioSelect = document.getElementById('municipio-select');
+  const conductorInput = document.getElementById('conductor-input');
+  const kmInput = document.getElementById('km-input');
+  const chipGroupIS = document.getElementById('chip-group-is');
+  const hiddenLT = document.getElementById('lleva-trae-hidden');
+  const isLabel = document.getElementById('ingreso-salida-label');
+
+  const RUTAS_ADM = new Set(['CASA DE LA CULTURA', 'ADM Z', 'ADM R', 'ADM T']);
+
+  function actualizarHiddenDesdeChips() {
+    const seleccionados = Array.from(chipGroupIS.querySelectorAll('.chip.selected'))
+      .map(c => c.dataset.value)
+      .filter(v => v !== '');
+    hiddenLT.value = seleccionados.join(', ');
+  }
+
+  // Marca como seleccionados los chips cuyo valor esté en `valores`, sin bloquear
+  // que el usuario luego los desmarque o marque otros manualmente.
+  function preseleccionarChips(valores) {
+    chipGroupIS.querySelectorAll('.chip').forEach(chip => {
+      chip.classList.toggle('selected', valores.includes(chip.dataset.value));
+    });
+    actualizarHiddenDesdeChips();
+  }
+
+  function aplicarModoIngresoSalida(esAdministrativa) {
+    if (esAdministrativa) {
+      isLabel.textContent = 'Ruta administrativa — Ingreso preseleccionado (puedes ajustar)';
+      preseleccionarChips(['Ingreso']);
+    } else {
+      isLabel.textContent = 'Ruta operativa — Ingreso y salida preseleccionados (puedes ajustar)';
+      preseleccionarChips(['Ingreso', 'Salida']);
+    }
+  }
+
+  function vincularChips() {
+    chipGroupIS.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (chip.dataset.value === '') {
+          // "No aplica" es excluyente: limpia cualquier otra selección
+          chipGroupIS.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+        } else {
+          chip.classList.toggle('selected');
+          if (chip.classList.contains('selected')) {
+            const noAplicaChip = chipGroupIS.querySelector('.chip[data-value=""]');
+            if (noAplicaChip) noAplicaChip.classList.remove('selected');
+          }
+        }
+        actualizarHiddenDesdeChips();
+      });
+    });
+  }
+  vincularChips();
+  aplicarModoIngresoSalida(rutaSelect.dataset.adm === 'true');
+
+  let ultimaPlacaBuscada = '';
+  async function autocompletarPorPlaca() {
+    const placa = placaInput.value.trim().toUpperCase();
+    if (!placa || placa === ultimaPlacaBuscada) return;
+    ultimaPlacaBuscada = placa;
+    try {
+      const resp = await fetch(`/api/datos-placa/${placa}`);
+      const datos = await resp.json();
+      if (datos.conductor || datos.ruta) {
+        if (datos.numero_interno) numeroInternoInput.value = datos.numero_interno;
+        if (datos.ruta) rutaSelect.value = datos.ruta;
+        if (datos.municipio) municipioSelect.value = datos.municipio;
+        if (datos.conductor) conductorInput.value = datos.conductor;
+        if (datos.km) kmInput.value = datos.km;
+        placaHint.textContent = 'Datos habituales cargados automáticamente — puedes editarlos si este viaje es distinto.';
+        placaHint.style.display = 'block';
+        aplicarModoIngresoSalida(RUTAS_ADM.has((datos.ruta || '').toUpperCase()));
+      } else {
+        placaHint.style.display = 'none';
+      }
+    } catch (e) { /* silencioso */ }
+  }
+  placaInput.addEventListener('change', autocompletarPorPlaca);
+
+  // si cambian la ruta manualmente, ofrecer el km oficial y actualizar modo ingreso/salida
+  rutaSelect.addEventListener('change', async () => {
+    const rutaActual = rutaSelect.value.toUpperCase();
+    aplicarModoIngresoSalida(RUTAS_ADM.has(rutaActual));
+    try {
+      const resp = await fetch(`/api/datos-ruta/${encodeURIComponent(rutaSelect.value)}`);
+      const datos = await resp.json();
+      if (datos.km && !kmInput.value) kmInput.value = datos.km;
+      if (datos.municipio && !municipioSelect.value) municipioSelect.value = datos.municipio;
+    } catch (e) { /* silencioso */ }
+  });
+</script>
+{% endblock %}
