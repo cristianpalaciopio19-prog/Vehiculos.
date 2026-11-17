@@ -1,41 +1,42 @@
 {% extends "admin_base.html" %}
 {% block title %}Enlace y QR{% endblock %}
 {% block css2 %}
-.share{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel{padding:24px}
-.link{display:flex;gap:8px;margin:14px 0}
-.link input{font-family:ui-monospace,Menlo,monospace;font-size:14px}
-.poster{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:center;max-width:380px;margin:0 auto}
-.poster .t{background:var(--navy);color:#fff;padding:20px 18px;border-bottom:4px solid var(--gold)}
-.poster .t h2{color:#fff;font-size:19px}
-.poster .t p{margin:6px 0 0;font-size:13px;opacity:.85}
-.poster img{width:78%;margin:18px auto 8px;display:block}
-.poster .b{padding:0 18px 20px;font-size:13.5px;color:var(--muted)}
-.poster .b strong{color:var(--navy)}
-@media(max-width:900px){.share{grid-template-columns:1fr}}
-@media print{.topbar,footer,.noprint,.flash{display:none!important}body{background:#fff}.share{display:block}.poster{border:0;max-width:100%}.poster img{width:60%}}
+.share{display:grid;grid-template-columns:1fr 420px;gap:56px;align-items:start;margin-top:8px}
+.block{padding:0 0 28px;margin-bottom:28px;border-bottom:1px solid var(--rule)}
+.link{display:flex;gap:8px;margin:12px 0}
+.link input{font-size:15.5px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.poster{border:1px solid var(--rule);border-radius:4px;overflow:hidden;text-align:center;background:#fff}
+.poster .pb{padding:30px 30px 26px}
+.poster .logo{margin:0 auto 18px;height:48px}
+.poster h2{font-size:26px;line-height:1.15}
+.poster img.qr{width:78%;display:block;margin:20px auto 14px}
+.poster p{margin:0;color:var(--text);font-size:16px}
+.poster p b{color:var(--navy)}
+@media(max-width:980px){.share{grid-template-columns:1fr}}
+@media print{.band,.top,.noprint,.flash{display:none!important}.wrap{padding:0}.share{display:block}.poster{border:0;max-width:640px;margin:0 auto}.poster .band{display:block!important}.poster h2{font-size:34px}.poster p{font-size:20px}}
 {% endblock %}
 {% block content %}
-<div class="head noprint"><div><h1>Enlace y código QR</h1><div class="sub">Comparta la encuesta con los operarios. No requiere cuenta ni registro.</div></div></div>
+<div class="head noprint"><div><h1>Enlace y código QR</h1><div class="sub">Los operarios responden desde el celular, sin crear cuenta.</div></div></div>
 <div class="share">
-  <section class="card panel noprint">
-    <h3>Enlace público</h3>
-    <div class="link"><input type="text" id="url" value="{{ url_publica }}" readonly>
-      <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(url.value);this.textContent='¡Copiado!'">Copiar</button></div>
-    <a class="btn btn-ghost btn-sm" target="_blank" href="https://wa.me/?text={{ ('Te invitamos a responder la Encuesta de satisfacción del servicio de transporte de Colombina (2 a 3 minutos, anónima): ' ~ url_publica)|urlencode }}">Compartir por WhatsApp</a>
-    <h3 style="margin-top:26px">Código QR</h3>
-    <p class="muted" style="font-size:14px">Descargue la imagen o imprima el afiche para ubicarlo en los buses y puntos de abordaje.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a class="btn btn-gold btn-sm" href="{{ url_for('qr_png', descargar=1) }}">⬇ Descargar QR (PNG)</a>
-      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨 Imprimir afiche</button>
+  <div class="noprint">
+    <div class="block"><h2 class="sec">Enlace de la encuesta</h2>
+      <div class="link"><input type="text" id="url" value="{{ url_publica }}" readonly aria-label="Enlace de la encuesta">
+        <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(url.value);this.textContent='Copiado'">Copiar</button></div>
+      <a class="btn btn-line btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text={{ ('Lo invitamos a responder la encuesta de satisfacción del servicio de transporte. Es anónima y toma de 2 a 3 minutos: ' ~ url_publica)|urlencode }}">Enviar por WhatsApp</a></div>
+    <div><h2 class="sec">Código QR</h2>
+      <div class="hint">Descargue la imagen o imprima el afiche para ubicarlo en los buses y en los puntos de abordaje.</div>
+      <div class="acts"><a class="btn btn-y btn-sm" href="{{ url_for('qr_png', descargar=1) }}">Descargar QR en PNG</a>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">Imprimir afiche</button></div></div>
+  </div>
+  <div class="poster">
+    <div class="band"></div>
+    <div class="pb">
+      {% if logo_v %}<img class="logo" src="{{ url_for('logo', v=logo_v) }}" alt="Colombina">{% endif %}
+      <h2>Encuesta de satisfacción del servicio de transporte</h2>
+      <img class="qr" src="{{ url_for('qr_png') }}" alt="Código QR de la encuesta">
+      <p><b>Escanee el código con la cámara de su celular.</b><br>Es anónima y toma de 2 a 3 minutos.</p>
     </div>
-  </section>
-  <section>
-    <div class="poster">
-      <div class="t"><h2>Encuesta de satisfacción del servicio de transporte</h2><p>Colombina · Área Administrativa y Financiera</p></div>
-      <img src="{{ url_for('qr_png') }}" alt="Código QR de la encuesta">
-      <div class="b"><strong>Escanea con la cámara de tu celular</strong><br>Anónima · 2 a 3 minutos<br>¡Tu opinión mejora nuestro servicio!</div>
-    </div>
-  </section>
+  </div>
 </div>
 {% endblock %}

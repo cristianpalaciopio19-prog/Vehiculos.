@@ -1,149 +1,126 @@
 {% extends "admin_base.html" %}
-{% block title %}Tablero{% endblock %}
+{% block title %}Resultados{% endblock %}
 {% block css2 %}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
-.kpi{padding:16px 18px;position:relative;overflow:hidden}
-.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-.kpi .v{font:600 30px Poppins;color:var(--navy);margin-top:4px;line-height:1.1}
-.kpi .v small{font-size:15px;color:var(--muted);font-weight:500}
-.kpi .s{font-size:12.5px;color:var(--muted);margin-top:2px}
-.kpi.main{background:var(--navy);border-color:var(--navy)}
-.kpi.main .l,.kpi.main .s{color:rgba(255,255,255,.75)}.kpi.main .v{color:#fff}.kpi.main .v small{color:var(--gold)}
-.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,transparent)}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-bottom:14px}
-.panel{padding:18px 20px}
-.panel h3{font-size:15.5px;margin-bottom:2px}
-.panel .hint{font-size:12.5px;color:var(--muted);margin-bottom:12px}
-.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
-.chart{position:relative;height:300px}
-.qrow{display:grid;grid-template-columns:1fr 70px 260px;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
-.qrow:last-child{border:0}
-.qrow .avg{font:600 18px Poppins;color:var(--navy);text-align:center}
-.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;background:#EEF1F6;font-size:11px;font-weight:600;color:#fff}
-.stack span{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap;overflow:hidden}
-.stack .p{background:var(--ok)}.stack .r{background:var(--warn)}.stack .n{background:var(--bad)}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.comments{max-height:420px;overflow:auto;display:grid;gap:10px}
-.cm{padding:12px 14px;background:#F8FAFD;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;font-size:14px}
-.cm .m{font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;gap:8px;align-items:center}
-.empty{text-align:center;padding:60px 20px;color:var(--muted)}
-@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi.main{grid-column:span 2}
-  .c4,.c5,.c6,.c7,.c8{grid-column:span 12}.qrow{grid-template-columns:1fr 54px;}.qrow .stackcell{grid-column:span 2}}
+.summary{display:grid;grid-template-columns:auto 1fr;gap:60px;align-items:end;padding:34px 0;border-bottom:1px solid var(--rule)}
+.big{font:600 112px/.85 'Source Serif 4';color:var(--navy);letter-spacing:-2px}
+.big small{font:500 30px 'Source Serif 4';color:var(--mute);letter-spacing:0;margin-left:4px}
+.bigcap{margin-top:12px;color:var(--text)}
+.count{font-size:17px;margin-bottom:12px}.count b{font-weight:700}
+.split{display:flex;height:38px;border-radius:4px;overflow:hidden;font-weight:700;font-size:15px}
+.split div{display:flex;align-items:center;padding:0 12px;white-space:nowrap;min-width:0;overflow:hidden}
+.split .g{background:var(--good);color:#fff}.split .m{background:var(--mid);color:var(--ink)}.split .r{background:var(--bad);color:#fff}
+.leg{display:flex;gap:30px;margin-top:12px;font-size:14.5px;color:var(--text);flex-wrap:wrap}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:7px}
+.block{padding:32px 0;border-bottom:1px solid var(--rule)}
+.two{display:grid;grid-template-columns:1.55fr 1fr;gap:56px}
+.chart{position:relative;height:290px}
+.q{display:grid;grid-template-columns:28px 1fr 64px 240px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--rule)}
+.q.first{border-top:0}
+.q .n{font-weight:700;color:var(--navy)}
+.q .avg{font:600 22px 'Source Serif 4';color:var(--navy);text-align:right}
+.q .t small{color:var(--mute)}
+.stk{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--rule)}
+.stk span{display:block}
+.stk .g{background:var(--good)}.stk .m{background:var(--mid)}.stk .r{background:var(--bad)}
+.pct{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute);margin-top:3px}
+.cm{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:14px 0;border-top:1px solid var(--rule)}
+.cm .d{color:var(--mute);font-size:13.5px;margin-top:2px}
+.cms{max-height:460px;overflow:auto}
+.empty{padding:70px 0;text-align:center}
+.empty h2{margin-bottom:8px}
+@media(max-width:980px){.summary,.two{grid-template-columns:1fr;gap:28px}.big{font-size:88px}.q{grid-template-columns:26px 1fr 54px}.q .stkc{grid-column:2/-1}}
 {% endblock %}
 {% block content %}
-<div class="head">
-  <div><h1>Tablero de resultados</h1>
-    <div class="sub">Satisfacción del servicio de transporte de personal{% if f.ruta %} · Ruta <strong>{{ f.ruta }}</strong>{% endif %}</div></div>
-  <a class="btn btn-ghost btn-sm" href="{{ url_publica }}" target="_blank">Ver encuesta pública ↗</a>
-</div>
+<div class="head"><div><h1>Resultados</h1>
+  <div class="sub">Satisfacción con el servicio de transporte de personal{% if f.ruta %}, ruta {{ f.ruta }}{% endif %}</div></div>
+  <a class="btn btn-line btn-sm" href="{{ url_publica }}" target="_blank" rel="noopener">Abrir la encuesta</a></div>
 {% include "_filtros.html" %}
 
 {% if s.total == 0 %}
-<div class="card empty"><h3>Aún no hay encuestas{% if f.ruta or f.desde or f.hasta %} con estos filtros{% endif %}</h3>
-<p>Comparta el enlace o el código QR para empezar a recibir respuestas.</p>
-<a class="btn btn-primary" href="{{ url_for('admin_qr') }}">Ir a Enlace y QR</a></div>
+<div class="empty"><h2>Todavía no hay encuestas{% if f.ruta or f.desde or f.hasta %} con estos filtros{% endif %}</h2>
+<p class="muted">Comparta el enlace o el código QR con los operarios para empezar a recibir respuestas.</p>
+<a class="btn btn-primary" href="{{ url_for('admin_qr') }}">Ver enlace y código QR</a></div>
 {% else %}
 
-<div class="kpis">
-  <div class="card kpi main"><div class="l">Calificación promedio</div><div class="v">{{ "%.2f"|format(s.promedio) }} <small>/ 5</small></div>
-    <div class="s">{{ escala[(s.promedio|round(0,'common'))|int] if s.promedio else '' }}</div></div>
-  <div class="card kpi" style="--c:var(--blue)"><div class="l">Encuestas</div><div class="v">{{ s.total }}</div><div class="s">{{ s.comentarios|length }} con comentarios</div></div>
-  <div class="card kpi" style="--c:var(--ok)"><div class="l">Positivas</div><div class="v">{{ s.pct_pos }}<small>%</small></div><div class="s">Bueno / Excelente</div></div>
-  <div class="card kpi" style="--c:var(--warn)"><div class="l">Regulares</div><div class="v">{{ s.pct_reg }}<small>%</small></div><div class="s">Regular</div></div>
-  <div class="card kpi" style="--c:var(--bad)"><div class="l">Negativas</div><div class="v">{{ s.pct_neg }}<small>%</small></div><div class="s">Malo / Muy malo</div></div>
-</div>
-
-<div class="grid">
-  <div class="card panel c8">
-    <h3>Promedio por pregunta</h3><div class="hint">Escala 1 (Muy malo) a 5 (Excelente)</div>
-    <div class="chart"><canvas id="chPreg"></canvas></div>
-  </div>
-  <div class="card panel c4">
-    <h3>Distribución de calificaciones</h3><div class="hint">Total de calificaciones emitidas</div>
-    <div class="chart"><canvas id="chDist"></canvas></div>
-  </div>
-</div>
-
-<div class="grid">
-  <div class="card panel c12">
-    <h3>Resultados por pregunta</h3><div class="hint">Promedio y proporción de calificaciones positivas, regulares y negativas</div>
-    {% for p in s.preguntas %}
-    <div class="qrow">
-      <div><strong style="color:var(--blue)">P{{ loop.index + 1 }}.</strong> {{ p.texto }} <span class="muted" style="font-size:12px">({{ p.n }})</span></div>
-      <div class="avg">{{ "%.2f"|format(p.promedio) }}</div>
-      <div class="stackcell"><div class="stack">
-        {% if p.pos %}<span class="p" style="width:{{ p.pos }}%">{{ p.pos|round|int }}%</span>{% endif %}
-        {% if p.reg %}<span class="r" style="width:{{ p.reg }}%">{{ p.reg|round|int }}%</span>{% endif %}
-        {% if p.neg %}<span class="n" style="width:{{ p.neg }}%">{{ p.neg|round|int }}%</span>{% endif %}
-      </div></div>
+<section class="summary">
+  <div><div class="big">{{ s.promedio|num }}<small>/ 5</small></div>
+    <div class="bigcap">Calificación promedio general</div></div>
+  <div>
+    <div class="count"><b>{{ s.total }}</b> encuesta{{ 's' if s.total != 1 }} recibida{{ 's' if s.total != 1 }}, {{ s.comentarios|length }} con recomendaciones</div>
+    <div class="split">
+      {% if s.pct_pos %}<div class="g" style="width:{{ s.pct_pos }}%">{{ s.pct_pos|num(1) }} %</div>{% endif %}
+      {% if s.pct_reg %}<div class="m" style="width:{{ s.pct_reg }}%">{{ s.pct_reg|num(1) }} %</div>{% endif %}
+      {% if s.pct_neg %}<div class="r" style="width:{{ s.pct_neg }}%">{{ s.pct_neg|num(1) }} %</div>{% endif %}
     </div>
-    {% endfor %}
-    <div class="legend"><span><i style="background:var(--ok)"></i>Positivas (4–5)</span><span><i style="background:var(--warn)"></i>Regulares (3)</span><span><i style="background:var(--bad)"></i>Negativas (1–2)</span></div>
+    <div class="leg"><span><i style="background:var(--good)"></i>Positivas: bueno y excelente</span><span><i style="background:var(--mid)"></i>Regulares</span><span><i style="background:var(--bad)"></i>Negativas: malo y muy malo</span></div>
   </div>
-</div>
+</section>
 
-<div class="grid">
-  <div class="card panel c7">
-    <h3>Satisfacción por ruta</h3><div class="hint">Promedio general de cada ruta (de mayor a menor)</div>
-    <div class="chart" style="height:{{ [300, 34 * s.rutas|length + 40]|max }}px"><canvas id="chRuta"></canvas></div>
-  </div>
-  <div class="card panel c5">
-    <h3>Detalle por ruta</h3><div class="hint">Encuestas recibidas y % de calificaciones positivas</div>
-    <div style="max-height:{{ [300, 34 * s.rutas|length + 40]|max }}px;overflow:auto">
-    <table><thead><tr><th>Ruta</th><th>Encuestas</th><th>Promedio</th><th>% Positivas</th></tr></thead><tbody>
-    {% for r in s.rutas %}
-      <tr><td><a href="?ruta={{ r.ruta }}&desde={{ f.desde }}&hasta={{ f.hasta }}" class="pill ruta" style="text-decoration:none">{{ r.ruta }}</a></td>
-      <td>{{ r.encuestas }}</td><td><strong>{{ "%.2f"|format(r.promedio) }}</strong></td>
-      <td><span class="pill {{ 'pos' if r.pos>=70 else ('reg' if r.pos>=50 else 'neg') }}">{{ r.pos }}%</span></td></tr>
-    {% endfor %}</tbody></table></div>
-  </div>
-</div>
+<section class="block two">
+  <div><h2 class="sec">Promedio por pregunta</h2><div class="hint">Escala de 1 (muy malo) a 5 (excelente)</div>
+    <div class="chart"><canvas id="chPreg"></canvas></div></div>
+  <div><h2 class="sec">Distribución de calificaciones</h2><div class="hint">{{ s.dist|sum }} calificaciones en total</div>
+    <div class="chart"><canvas id="chDist"></canvas></div></div>
+</section>
 
-<div class="grid">
+<section class="block">
+  <h2 class="sec">Resultado de cada pregunta</h2><div class="hint">Promedio y porcentaje de calificaciones positivas, regulares y negativas</div>
+  {% for p in s.preguntas %}
+  <div class="q {{ 'first' if loop.first }}">
+    <div class="n">{{ loop.index + 1 }}</div>
+    <div class="t">{{ p.texto }} <small>({{ p.n }})</small></div>
+    <div class="avg">{{ p.promedio|num }}</div>
+    <div class="stkc"><div class="stk"><span class="g" style="width:{{ p.pos }}%"></span><span class="m" style="width:{{ p.reg }}%"></span><span class="r" style="width:{{ p.neg }}%"></span></div>
+      <div class="pct"><span>{{ p.pos|num(0) }} %</span><span>{{ p.reg|num(0) }} %</span><span>{{ p.neg|num(0) }} %</span></div></div>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="block two">
+  <div><h2 class="sec">Satisfacción por ruta</h2><div class="hint">Promedio general de cada ruta, de mayor a menor</div>
+    <div class="chart" style="height:{{ [290, 30 * s.rutas|length + 40]|max }}px"><canvas id="chRuta"></canvas></div></div>
+  <div><h2 class="sec">Detalle por ruta</h2><div class="hint">Seleccione una ruta para ver solo sus resultados</div>
+    <div style="max-height:{{ [290, 30 * s.rutas|length + 40]|max }}px;overflow:auto">
+    <table><thead><tr><th>Ruta</th><th>Encuestas</th><th>Promedio</th><th>Positivas</th></tr></thead><tbody>
+    {% for r in s.rutas %}<tr><td><a class="code" href="?ruta={{ r.ruta|urlencode }}&desde={{ f.desde }}&hasta={{ f.hasta }}">{{ r.ruta }}</a></td>
+      <td>{{ r.encuestas }}</td><td><b>{{ r.promedio|num }}</b></td><td>{{ r.pos|num(1) }} %</td></tr>{% endfor %}
+    </tbody></table></div></div>
+</section>
+
+<section class="block {{ 'two' if s.tendencia|length > 1 }}" style="border-bottom:0">
   {% if s.tendencia|length > 1 %}
-  <div class="card panel c6">
-    <h3>Evolución semanal</h3><div class="hint">Promedio general por semana (inicio lunes)</div>
-    <div class="chart"><canvas id="chTend"></canvas></div>
-  </div>
+  <div><h2 class="sec">Evolución semanal</h2><div class="hint">Promedio general por semana, iniciando el lunes</div>
+    <div class="chart"><canvas id="chTend"></canvas></div></div>
   {% endif %}
-  <div class="card panel {{ 'c6' if s.tendencia|length > 1 else 'c12' }}">
-    <h3>Recomendaciones y comentarios</h3><div class="hint">{{ s.comentarios|length }} comentario(s) de los operarios</div>
-    <div class="comments">
-    {% for c in s.comentarios %}
-      <div class="cm"><div class="m"><span class="pill ruta">{{ c.ruta }}</span>{{ c.fecha.strftime('%d/%m/%Y %I:%M %p') }}</div>{{ c.comentario }}</div>
-    {% else %}<div class="muted">Sin comentarios en este periodo.</div>{% endfor %}
-    </div>
-  </div>
-</div>
+  <div><h2 class="sec">Recomendaciones de los operarios</h2><div class="hint">{{ s.comentarios|length }} comentario{{ 's' if s.comentarios|length != 1 }}, del más reciente al más antiguo</div>
+    <div class="cms">
+    {% for c in s.comentarios %}<div class="cm"><div><span class="code">{{ c.ruta }}</span></div><div>{{ c.comentario }}<div class="d">{{ c.fecha|fecha }}</div></div></div>
+    {% else %}<p class="muted">No hay comentarios en este periodo.</p>{% endfor %}
+    </div></div>
+</section>
 {% endif %}
 {% endblock %}
 
 {% block js %}
 {% if s.total %}
-<script src="{{ url_for("static", filename="chart.umd.min.js") }}"></script>
+<script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
 <script>
-const S = {{ s|tojson }};
-const NAVY='#0B2C6B',BLUE='#1B5FC4',GOLD='#F2A900',OK='#1E8E5A',WARN='#E0A100',BAD='#C8372D';
-Chart.defaults.font.family='Inter, system-ui, sans-serif';Chart.defaults.color='#5B6578';
-Chart.defaults.plugins.legend.labels.boxWidth=12;
-const colorProm=v=>v>=4?NAVY:(v>=3?BLUE:BAD);
-const etiquetas=S.preguntas.map((p,i)=>'P'+(i+2));
-new Chart(chPreg,{type:'bar',data:{labels:etiquetas,datasets:[{label:'Promedio',data:S.preguntas.map(p=>p.promedio),
-  backgroundColor:S.preguntas.map(p=>colorProm(p.promedio)),borderRadius:6,maxBarThickness:46}]},
-  options:{maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1},grid:{color:'#EEF1F6'}},x:{grid:{display:false}}},
-  plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>S.preguntas[i[0].dataIndex].texto,label:c=>' Promedio: '+c.raw.toFixed(2)}}}}});
-new Chart(chDist,{type:'doughnut',data:{labels:['Muy malo','Malo','Regular','Bueno','Excelente'],
-  datasets:[{data:S.dist,backgroundColor:[BAD,'#E8776E',WARN,BLUE,NAVY],borderWidth:2,borderColor:'#fff'}]},
-  options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom'},
-  tooltip:{callbacks:{label:c=>{const t=S.dist.reduce((a,b)=>a+b,0);return ' '+c.label+': '+c.raw+' ('+(100*c.raw/t).toFixed(1)+'%)'}}}}}});
-new Chart(chRuta,{type:'bar',data:{labels:S.rutas.map(r=>r.ruta),datasets:[{label:'Promedio',data:S.rutas.map(r=>r.promedio),
-  backgroundColor:S.rutas.map(r=>colorProm(r.promedio)),borderRadius:5,maxBarThickness:22}]},
-  options:{indexAxis:'y',maintainAspectRatio:false,scales:{x:{min:0,max:5,ticks:{stepSize:1},grid:{color:'#EEF1F6'}},y:{grid:{display:false}}},
-  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Promedio: '+c.raw.toFixed(2)+' · '+S.rutas[c.dataIndex].encuestas+' encuestas'}}}}});
-if(window.chTend) new Chart(chTend,{type:'line',data:{labels:S.tendencia.map(t=>t.semana),datasets:[{label:'Promedio',data:S.tendencia.map(t=>t.promedio),
-  borderColor:NAVY,backgroundColor:'rgba(11,44,107,.08)',fill:true,tension:.3,pointBackgroundColor:GOLD,pointRadius:4}]},
-  options:{maintainAspectRatio:false,scales:{y:{min:1,max:5,grid:{color:'#EEF1F6'}},x:{grid:{display:false}}},plugins:{legend:{display:false}}}});
+const S={{ {'preguntas':s.preguntas,'dist':s.dist,'rutas':s.rutas,'tendencia':s.tendencia}|tojson }};
+const NAVY='#102A5C',Y='#E9B200',BAD='#B4372B',GRID='#E3E6EB';
+const fmt=v=>v.toFixed(2).replace('.',',');
+Chart.defaults.font.family="'Source Sans 3', system-ui, sans-serif";Chart.defaults.font.size=13;Chart.defaults.color='#6B7280';
+const col=v=>v>=3.5?NAVY:(v>=2.5?Y:BAD);
+new Chart(chPreg,{type:'bar',data:{labels:S.preguntas.map((p,i)=>'P'+(i+2)),datasets:[{data:S.preguntas.map(p=>p.promedio),backgroundColor:S.preguntas.map(p=>col(p.promedio)),borderRadius:3,maxBarThickness:40}]},
+ options:{maintainAspectRatio:false,scales:{y:{min:0,max:5,ticks:{stepSize:1},grid:{color:GRID},border:{display:false}},x:{grid:{display:false}}},
+ plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>S.preguntas[i[0].dataIndex].texto,label:c=>' Promedio: '+fmt(c.raw)}}}}});
+new Chart(chDist,{type:'doughnut',data:{labels:['Excelente','Bueno','Regular','Malo','Muy malo'],datasets:[{data:[...S.dist].reverse(),backgroundColor:[NAVY,'#4E6FA8',Y,'#D9826F',BAD],borderColor:'#fff',borderWidth:2}]},
+ options:{maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{boxWidth:11,boxHeight:11,padding:12}},
+ tooltip:{callbacks:{label:c=>{const t=S.dist.reduce((a,b)=>a+b,0);return ' '+c.label+': '+c.raw+' ('+(100*c.raw/t).toFixed(1).replace('.',',')+' %)'}}}}}});
+new Chart(chRuta,{type:'bar',data:{labels:S.rutas.map(r=>r.ruta),datasets:[{data:S.rutas.map(r=>r.promedio),backgroundColor:S.rutas.map(r=>col(r.promedio)),borderRadius:3,maxBarThickness:18}]},
+ options:{indexAxis:'y',maintainAspectRatio:false,scales:{x:{min:0,max:5,ticks:{stepSize:1},grid:{color:GRID},border:{display:false}},y:{grid:{display:false}}},
+ plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Promedio: '+fmt(c.raw)+', '+S.rutas[c.dataIndex].encuestas+' encuestas'}}}}});
+if(window.chTend)new Chart(chTend,{type:'line',data:{labels:S.tendencia.map(t=>t.semana),datasets:[{data:S.tendencia.map(t=>t.promedio),borderColor:NAVY,borderWidth:2,pointBackgroundColor:Y,pointBorderColor:NAVY,pointRadius:4,tension:.25}]},
+ options:{maintainAspectRatio:false,scales:{y:{min:1,max:5,grid:{color:GRID},border:{display:false}},x:{grid:{display:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Promedio: '+fmt(c.raw)}}}}});
 </script>
 {% endif %}
 {% endblock %}

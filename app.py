@@ -47,6 +47,9 @@ create table if not exists enc_detalle (
   pregunta_id int references enc_preguntas(id) on delete set null,
   pregunta_texto text not null,
   valor smallint not null check (valor between 1 and 5));
+create table if not exists enc_ajustes (
+  clave text primary key, mime text, datos bytea,
+  actualizado timestamptz not null default now());
 """
 
 
@@ -109,6 +112,47 @@ def csrf_token():
 
 
 app.jinja_env.globals["csrf_token"] = csrf_token
+
+
+@app.template_filter("num")
+def num(v, dec=2):
+    """Formato colombiano: coma decimal."""
+    return f"{v:.{dec}f}".replace(".", ",")
+
+
+MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+
+
+@app.template_filter("fecha")
+def fecha(d, hora=True):
+    s = f"{d.day} {MESES[d.month - 1]} {d.year}"
+    if hora:
+        h = d.strftime("%I:%M").lstrip("0")
+        s += f", {h} {'a. m.' if d.hour < 12 else 'p. m.'}"
+    return s
+
+
+_logo_cache = {"v": None, "t": None}
+
+
+def logo_version():
+    """Devuelve un sello de versión del logo (o None si no se ha cargado). Cache de 60 s."""
+    ahora = datetime.now()
+    if _logo_cache["t"] and (ahora - _logo_cache["t"]).seconds < 60:
+        return _logo_cache["v"]
+    try:
+        r = q("select extract(epoch from actualizado)::bigint as v from enc_ajustes where clave='logo'", one=True)
+        _logo_cache["v"] = r["v"] if r else None
+    except Exception:
+        db().rollback()
+        _logo_cache["v"] = None
+    _logo_cache["t"] = ahora
+    return _logo_cache["v"]
+
+
+@app.context_processor
+def inject_logo():
+    return {"logo_v": logo_version()}
 
 
 @app.before_request
@@ -271,6 +315,16 @@ def gracias():
     return render_template("gracias.html")
 
 
+@app.route("/logo")
+def logo():
+    r = q("select mime, datos from enc_ajustes where clave='logo'", one=True)
+    if not r:
+        abort(404)
+    resp = send_file(io.BytesIO(bytes(r["datos"])), mimetype=r["mime"])
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
 @app.route("/qr.png")
 def qr_png():
     url = request.url_root.rstrip("/") + url_for("encuesta")
@@ -337,7 +391,28 @@ def eliminar_respuesta(rid):
 def configuracion():
     if request.method == "POST":
         acc = request.form.get("accion")
-        if acc == "ruta_agregar":
+        if acc == "logo_subir":
+            f = request.files.get("logo")
+            tipos = {"image/png", "image/jpeg", "image/svg+xml", "image/webp"}
+            if f and f.mimetype in tipos:
+                datos = f.read()
+                if len(datos) > 2 * 1024 * 1024:
+                    flash("El logo debe pesar menos de 2 MB.")
+                else:
+                    q("""insert into enc_ajustes (clave, mime, datos, actualizado) values ('logo', %s, %s, now())
+                         on conflict (clave) do update set mime=excluded.mime, datos=excluded.datos, actualizado=now()""",
+                      (f.mimetype, psycopg2.Binary(datos)), commit=True)
+                    _logo_cache["t"] = None
+                    flash("Logo actualizado.")
+            else:
+                flash("Seleccione una imagen PNG, JPG, SVG o WEBP.")
+            return redirect(url_for("configuracion") + "#logo")
+        elif acc == "logo_quitar":
+            q("delete from enc_ajustes where clave='logo'", commit=True)
+            _logo_cache["t"] = None
+            flash("Logo eliminado.")
+            return redirect(url_for("configuracion") + "#logo")
+        elif acc == "ruta_agregar":
             nombre = request.form.get("nombre", "").strip().upper()
             if nombre:
                 q("""insert into enc_rutas (nombre, orden)
@@ -400,7 +475,7 @@ def admin_qr():
 
 
 # ───────────────────────── Exportación Excel ─────────────────────────
-NAVY = "0B2C6B"
+NAVY = "102A5C"
 GOLD = "F2A900"
 
 

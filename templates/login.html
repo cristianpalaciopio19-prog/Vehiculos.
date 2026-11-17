@@ -1,18 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Panel administrativo{% endblock %}
+{% block title %}Ingreso al panel{% endblock %}
 {% block css %}
-body{min-height:100vh;display:grid;place-items:center;background:linear-gradient(160deg,var(--navy),#123f8f 70%,var(--blue));padding:16px}
-.box{width:100%;max-width:380px;padding:32px 28px;border-top:4px solid var(--gold)}
-.box h1{font-size:21px;margin-bottom:4px}
-.box form{display:grid;gap:14px;margin-top:22px}
+.page{max-width:400px;margin:0 auto;padding:48px 24px}
+h1{font-size:28px;margin:{{ '30px' if logo_v else '0' }} 0 6px}
+form{display:grid;gap:16px;margin-top:26px}
+label{font-weight:600;font-size:15px;display:block;margin-bottom:6px}
 {% endblock %}
 {% block body %}
-<div class="card box">
-  <h1>Panel administrativo</h1>
-  <div class="muted" style="font-size:14px">Encuesta de satisfacción del servicio de transporte</div>
+<div class="band"></div>
+<div class="page">
+  {% if logo_v %}<img class="logo" src="{{ url_for('logo', v=logo_v) }}" alt="Colombina">{% endif %}
+  <h1>Panel de la encuesta</h1>
+  <div class="muted">Resultados de la encuesta de satisfacción del servicio de transporte.</div>
   {% with m = get_flashed_messages() %}{% for x in m %}<div class="flash">{{ x }}</div>{% endfor %}{% endwith %}
   <form method="post">
-    <div><label>Contraseña</label><input type="password" name="password" autofocus required></div>
+    <div><label for="pw">Contraseña</label><input type="password" id="pw" name="password" autofocus required></div>
     <button class="btn btn-primary">Ingresar</button>
   </form>
 </div>
