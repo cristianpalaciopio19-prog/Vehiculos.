@@ -1,0 +1,12 @@
+<form class="card filters" method="get">
+  <div><label>Ruta</label>
+    <select name="ruta" onchange="this.form.submit()"><option value="">Todas las rutas</option>
+      {% for r in rutas %}<option {{ 'selected' if f.ruta==r.nombre }}>{{ r.nombre }}</option>{% endfor %}
+    </select></div>
+  <div><label>Desde</label><input type="date" name="desde" value="{{ f.desde }}" onchange="this.form.submit()"></div>
+  <div><label>Hasta</label><input type="date" name="hasta" value="{{ f.hasta }}" onchange="this.form.submit()"></div>
+  <div class="acts">
+    {% if f.ruta or f.desde or f.hasta %}<a class="btn btn-ghost btn-sm" href="{{ request.path }}">Limpiar</a>{% endif %}
+    <a class="btn btn-gold btn-sm" href="{{ url_for('exportar', **f) }}">⬇ Exportar a Excel</a>
+  </div>
+</form>

@@ -1,0 +1,73 @@
+{% extends "admin_base.html" %}
+{% block title %}Preguntas y rutas{% endblock %}
+{% block css2 %}
+.cols{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start}
+.panel{padding:20px}
+.panel h3{font-size:16px;margin-bottom:4px}
+.panel .hint{font-size:13px;color:var(--muted);margin-bottom:14px}
+.item{display:flex;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.item form.grow{flex:1;display:flex;gap:8px}
+.item input[type=text]{padding:8px 10px;font-size:14px}
+.item.off input[type=text]{color:var(--muted);background:#F6F7F9;text-decoration:line-through}
+.ico{background:#fff;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;cursor:pointer;color:var(--navy);flex:0 0 auto}
+.ico:hover{border-color:var(--blue)}
+.cnt{font-size:12px;color:var(--muted);white-space:nowrap;min-width:52px;text-align:right}
+.add{display:flex;gap:8px;margin-top:14px}
+.rutas{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ruta{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);border-radius:10px}
+.ruta input[type=text]{padding:6px 8px;font-size:14px;font-weight:600;color:var(--navy)}
+.ruta.off{opacity:.5}
+.ruta .ico{width:30px;height:30px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Preguntas y rutas</h1><div class="sub">Los cambios se reflejan de inmediato en la encuesta pública. Las respuestas históricas se conservan.</div></div></div>
+<div class="cols">
+  <section class="card panel" id="preguntas">
+    <h3>Preguntas de calificación (escala 1 a 5)</h3>
+    <div class="hint">La Pregunta 1 (ruta) y la última (recomendaciones) son fijas. Desactive una pregunta para ocultarla sin perder su historial.</div>
+    {% for p in preguntas %}
+    <div class="item {{ '' if p.activa else 'off' }}">
+      <form method="post" style="display:flex;flex-direction:column;gap:2px">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ p.id }}"><input type="hidden" name="ancla" value="#preguntas">
+        <button class="ico" style="height:17px;font-size:10px" name="accion" value="preg_subir" title="Subir" {{ 'disabled' if loop.first }}>▲</button>
+        <button class="ico" style="height:17px;font-size:10px" name="accion" value="preg_bajar" title="Bajar" {{ 'disabled' if loop.last }}>▼</button>
+      </form>
+      <form method="post" class="grow">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ p.id }}"><input type="hidden" name="ancla" value="#preguntas">
+        <input type="text" name="texto" value="{{ p.texto }}">
+        <button class="ico" name="accion" value="preg_editar" title="Guardar texto">💾</button>
+      </form>
+      <form method="post"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ p.id }}"><input type="hidden" name="ancla" value="#preguntas">
+        <button class="ico" name="accion" value="preg_toggle" title="{{ 'Desactivar' if p.activa else 'Activar' }}">{{ '👁' if p.activa else '🚫' }}</button></form>
+      <span class="cnt">{{ p.n }} resp.</span>
+    </div>
+    {% endfor %}
+    <form method="post" class="add"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="ancla" value="#preguntas">
+      <input type="text" name="texto" placeholder="Nueva pregunta de calificación…" required>
+      <button class="btn btn-primary btn-sm" name="accion" value="preg_agregar">Agregar</button></form>
+  </section>
+
+  <section class="card panel" id="rutas">
+    <h3>Rutas disponibles</h3>
+    <div class="hint">Edite el nombre y presione 💾. Desactive las rutas que ya no operan (se conservan sus encuestas).</div>
+    <div class="rutas">
+    {% for r in rutas %}
+      <div class="ruta {{ '' if r.activa else 'off' }}" title="{{ r.n }} encuesta(s)">
+        <form method="post" style="display:flex;gap:4px;flex:1">
+          <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ r.id }}"><input type="hidden" name="ancla" value="#rutas"><input type="hidden" name="propagar" value="1">
+          <input type="text" name="nombre" value="{{ r.nombre }}">
+          <button class="ico" name="accion" value="ruta_editar" title="Guardar">💾</button>
+        </form>
+        <form method="post"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ r.id }}"><input type="hidden" name="ancla" value="#rutas">
+          <button class="ico" name="accion" value="ruta_toggle" title="{{ 'Desactivar' if r.activa else 'Activar' }}">{{ '👁' if r.activa else '🚫' }}</button></form>
+      </div>
+    {% endfor %}
+    </div>
+    <form method="post" class="add"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="ancla" value="#rutas">
+      <input type="text" name="nombre" placeholder="Nueva ruta (ej. ADM Z)" required>
+      <button class="btn btn-primary btn-sm" name="accion" value="ruta_agregar">Agregar</button></form>
+    <p class="muted" style="font-size:12.5px;margin:12px 0 0">Al renombrar una ruta, sus encuestas anteriores también se actualizan con el nuevo nombre.</p>
+  </section>
+</div>
+{% endblock %}

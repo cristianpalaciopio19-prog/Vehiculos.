@@ -1,0 +1,41 @@
+{% extends "admin_base.html" %}
+{% block title %}Enlace y QR{% endblock %}
+{% block css2 %}
+.share{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{padding:24px}
+.link{display:flex;gap:8px;margin:14px 0}
+.link input{font-family:ui-monospace,Menlo,monospace;font-size:14px}
+.poster{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:center;max-width:380px;margin:0 auto}
+.poster .t{background:var(--navy);color:#fff;padding:20px 18px;border-bottom:4px solid var(--gold)}
+.poster .t h2{color:#fff;font-size:19px}
+.poster .t p{margin:6px 0 0;font-size:13px;opacity:.85}
+.poster img{width:78%;margin:18px auto 8px;display:block}
+.poster .b{padding:0 18px 20px;font-size:13.5px;color:var(--muted)}
+.poster .b strong{color:var(--navy)}
+@media(max-width:900px){.share{grid-template-columns:1fr}}
+@media print{.topbar,footer,.noprint,.flash{display:none!important}body{background:#fff}.share{display:block}.poster{border:0;max-width:100%}.poster img{width:60%}}
+{% endblock %}
+{% block content %}
+<div class="head noprint"><div><h1>Enlace y código QR</h1><div class="sub">Comparta la encuesta con los operarios. No requiere cuenta ni registro.</div></div></div>
+<div class="share">
+  <section class="card panel noprint">
+    <h3>Enlace público</h3>
+    <div class="link"><input type="text" id="url" value="{{ url_publica }}" readonly>
+      <button class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(url.value);this.textContent='¡Copiado!'">Copiar</button></div>
+    <a class="btn btn-ghost btn-sm" target="_blank" href="https://wa.me/?text={{ ('Te invitamos a responder la Encuesta de satisfacción del servicio de transporte de Colombina (2 a 3 minutos, anónima): ' ~ url_publica)|urlencode }}">Compartir por WhatsApp</a>
+    <h3 style="margin-top:26px">Código QR</h3>
+    <p class="muted" style="font-size:14px">Descargue la imagen o imprima el afiche para ubicarlo en los buses y puntos de abordaje.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-gold btn-sm" href="{{ url_for('qr_png', descargar=1) }}">⬇ Descargar QR (PNG)</a>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨 Imprimir afiche</button>
+    </div>
+  </section>
+  <section>
+    <div class="poster">
+      <div class="t"><h2>Encuesta de satisfacción del servicio de transporte</h2><p>Colombina · Área Administrativa y Financiera</p></div>
+      <img src="{{ url_for('qr_png') }}" alt="Código QR de la encuesta">
+      <div class="b"><strong>Escanea con la cámara de tu celular</strong><br>Anónima · 2 a 3 minutos<br>¡Tu opinión mejora nuestro servicio!</div>
+    </div>
+  </section>
+</div>
+{% endblock %}

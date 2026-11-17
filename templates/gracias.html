@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}¡Gracias!{% endblock %}
+{% block css %}
+body{min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(160deg,var(--navy),#123f8f 70%,var(--blue))}
+.box{margin:auto;max-width:460px;padding:40px 30px;text-align:center;border-top:4px solid var(--gold)}
+.ok{width:72px;height:72px;border-radius:50%;background:#EAF6EF;color:var(--ok);display:grid;place-items:center;margin:0 auto 18px;font-size:36px}
+.box h1{font-size:24px}
+.box p{color:var(--muted);font-size:16px;margin:14px 0 0}
+footer{color:rgba(255,255,255,.7)}
+{% endblock %}
+{% block body %}
+<div class="card box" style="margin-top:12vh">
+  <div class="ok">✓</div>
+  <h1>¡Respuesta enviada!</h1>
+  <p>Gracias por participar. Tu opinión es importante para continuar mejorando nuestro servicio de transporte.</p>
+</div>
+<footer>Colombina S.A. · Área Administrativa y Financiera</footer>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "admin_base.html" %}
+{% block title %}Respuestas{% endblock %}
+{% block css2 %}
+.tbl{overflow:auto;max-height:70vh}
+td.n{text-align:center;font-weight:600}
+td.n.v1,td.n.v2{color:var(--bad)}td.n.v3{color:#8A6400}td.n.v4,td.n.v5{color:var(--ok)}
+th.n{text-align:center}
+.del{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px}
+.del:hover{background:#FBE7E5;color:var(--bad)}
+{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Respuestas recibidas</h1><div class="sub">Registro histórico de todas las encuestas · {{ respuestas|length }} resultado(s)</div></div></div>
+{% include "_filtros.html" %}
+<div class="card tbl">
+<table>
+  <thead><tr><th>#</th><th>Fecha</th><th>Ruta</th>
+    {% for p in preguntas %}<th class="n" title="{{ p.texto }}">P{{ loop.index + 1 }}</th>{% endfor %}
+    <th>Recomendaciones / sugerencias</th><th></th></tr></thead>
+  <tbody>
+  {% for r in respuestas %}
+    <tr><td class="muted">{{ r.id }}</td><td style="white-space:nowrap">{{ r.fecha.strftime('%d/%m/%Y') }}<br><span class="muted" style="font-size:12px">{{ r.fecha.strftime('%I:%M %p') }}</span></td>
+    <td><span class="pill ruta">{{ r.ruta }}</span></td>
+    {% for p in preguntas %}{% set v = por_resp.get(r.id, {}).get(p.id) %}<td class="n v{{ v }}">{{ v or '—' }}</td>{% endfor %}
+    <td style="min-width:240px">{{ r.comentario or '' }}</td>
+    <td><form method="post" action="{{ url_for('eliminar_respuesta', rid=r.id) }}" onsubmit="return confirm('¿Eliminar esta respuesta de forma permanente?')">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="del" title="Eliminar">🗑</button></form></td></tr>
+  {% else %}
+    <tr><td colspan="{{ preguntas|length + 5 }}" class="muted" style="text-align:center;padding:40px">No hay respuestas con estos filtros.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="muted" style="font-size:13px;margin-top:10px">
+{% for p in preguntas %}<strong>P{{ loop.index + 1 }}</strong>: {{ p.texto }}{{ '' if loop.last else ' · ' }}{% endfor %}</p>
+{% endblock %}

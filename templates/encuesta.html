@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block css %}
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#123f8f 60%,var(--blue) 100%);color:#fff;padding:34px 0 38px;position:relative}
+.hero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--gold)}
+.hero .tag{display:inline-block;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:10px}
+.hero h1{color:#fff;font-size:clamp(24px,5.2vw,32px);font-weight:600}
+.hero p{opacity:.88;margin:12px 0 0;max-width:600px;font-size:15.5px}
+.hero .meta{display:flex;gap:18px;margin-top:16px;font-size:13px;opacity:.8;flex-wrap:wrap}
+.form{margin-top:6px}
+.q{padding:22px 22px 20px;margin-bottom:14px}
+.q .num{font:600 12px Poppins;color:var(--blue);letter-spacing:.8px;text-transform:uppercase}
+.q h3{font-size:16.5px;font-weight:500;color:var(--ink);margin:6px 0 16px;font-family:Inter}
+.q.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(200,55,45,.1)}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px 10px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;transition:.15s;font-weight:500;text-align:center;user-select:none}
+.scale label .n{font:600 20px Poppins;color:var(--navy)}
+.scale label .t{font-size:11.5px;color:var(--muted);line-height:1.2}
+.scale label:hover{border-color:var(--blue);background:#F7FAFF}
+.scale input:checked+label{background:var(--navy);border-color:var(--navy)}
+.scale input:checked+label .n{color:var(--gold)}
+.scale input:checked+label .t{color:#fff}
+.scale input:focus-visible+label{box-shadow:0 0 0 3px rgba(27,95,196,.3)}
+.progress{position:sticky;top:0;z-index:5;background:rgba(244,246,250,.92);backdrop-filter:blur(6px);padding:10px 0}
+.bar{height:6px;background:#DDE4EF;border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--gold));transition:width .25s}
+.progress small{display:block;text-align:right;color:var(--muted);font-size:12px;margin-top:4px}
+.submit{display:flex;flex-direction:column;align-items:center;gap:10px;margin:22px 0 10px}
+.submit .btn{width:100%;max-width:360px;padding:15px;font-size:16px}
+.anon{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+@media(max-width:480px){
+  .q{padding:18px 14px}
+  .scale{gap:6px}
+  .scale label{padding:10px 2px 8px}
+  .scale label .t{font-size:10.5px}
+}
+{% endblock %}
+{% block body %}
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">Colombina · Área Administrativa y Financiera</span>
+    <h1>Encuesta de satisfacción del servicio de transporte</h1>
+    <p>Tu opinión nos ayuda a mejorar la seguridad, puntualidad y comodidad de cada recorrido. Responde con sinceridad: la encuesta es <strong>anónima</strong> y toma menos de 3 minutos.</p>
+    <div class="meta"><span>⏱ 2–3 minutos</span><span>🔒 Anónima</span><span>📋 {{ preguntas|length + 2 }} preguntas</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="progress"><div class="bar"><i id="bar"></i></div><small id="prog">0 de {{ preguntas|length + 1 }} respondidas</small></div>
+  {% with m = get_flashed_messages() %}{% for x in m %}<div class="flash">{{ x }}</div>{% endfor %}{% endwith %}
+
+  <form class="form" method="post" action="{{ url_for('enviar') }}" id="f" novalidate>
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+
+    <section class="card q" data-req>
+      <div class="num">Pregunta 1</div>
+      <h3>¿A qué ruta pertenece?</h3>
+      <select name="ruta" required>
+        <option value="">Seleccione su ruta…</option>
+        {% for r in rutas %}<option>{{ r.nombre }}</option>{% endfor %}
+      </select>
+    </section>
+
+    {% for p in preguntas %}
+    <section class="card q" data-req>
+      <div class="num">Pregunta {{ loop.index + 1 }}</div>
+      <h3>{{ p.texto }}</h3>
+      <div class="scale" role="radiogroup">
+        {% for v, t in escala.items() %}
+        <input type="radio" id="p{{p.id}}_{{v}}" name="p{{ p.id }}" value="{{ v }}" required>
+        <label for="p{{p.id}}_{{v}}"><span class="n">{{ v }}</span><span class="t">{{ t }}</span></label>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+
+    <section class="card q">
+      <div class="num">Pregunta {{ preguntas|length + 2 }}</div>
+      <h3>Recomendaciones o sugerencias <span class="muted" style="font-size:13px">(opcional)</span></h3>
+      <textarea name="comentario" rows="4" maxlength="2000" placeholder="Escribe aquí tus comentarios, inconformidades o propuestas de mejora…"></textarea>
+    </section>
+
+    <div class="submit">
+      <button class="btn btn-gold" type="submit" id="send">Enviar respuestas</button>
+      <span class="anon">🔒 No se registra tu nombre ni tu documento.</span>
+    </div>
+  </form>
+</main>
+<footer>Colombina S.A. · Área Administrativa y Financiera</footer>
+{% endblock %}
+{% block js %}
+<script>
+const f=document.getElementById('f'),secs=[...f.querySelectorAll('[data-req]')];
+function done(s){const sel=s.querySelector('select');return sel?!!sel.value:!!s.querySelector('input:checked')}
+function upd(){const n=secs.filter(done).length;document.getElementById('bar').style.width=(100*n/secs.length)+'%';
+  document.getElementById('prog').textContent=n+' de '+secs.length+' respondidas';secs.forEach(s=>{if(done(s))s.classList.remove('err')})}
+f.addEventListener('change',upd);
+f.addEventListener('submit',e=>{const miss=secs.filter(s=>!done(s));
+  if(miss.length){e.preventDefault();miss.forEach(s=>s.classList.add('err'));miss[0].scrollIntoView({behavior:'smooth',block:'center'});return}
+  const b=document.getElementById('send');b.disabled=true;b.textContent='Enviando…'});
+</script>
+{% endblock %}

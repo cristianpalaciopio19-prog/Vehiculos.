@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block css %}
+.page{padding:24px 0 10px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.head h1{font-size:24px}
+.head .sub{color:var(--muted);font-size:14px;margin-top:2px}
+.filters{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:14px 16px;margin-bottom:18px}
+.filters>div{display:flex;flex-direction:column;gap:4px;min-width:140px;flex:1}
+.filters label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.filters select,.filters input{padding:9px 10px;font-size:14px}
+.filters .acts{flex:0 0 auto;flex-direction:row;gap:8px;min-width:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#F2F5FA;color:var(--navy);text-align:left;font:600 12.5px Inter;text-transform:uppercase;letter-spacing:.4px;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:#FAFBFD}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12.5px;font-weight:600}
+.pill.pos{background:#E6F4EC;color:var(--ok)}.pill.reg{background:#FFF4D6;color:#8A6400}.pill.neg{background:#FBE7E5;color:var(--bad)}
+.pill.ruta{background:var(--sky);color:var(--navy)}
+@media(max-width:720px){.topbar .in{height:auto;padding:10px 0;flex-direction:column;align-items:flex-start}.nav a{padding:6px 9px;font-size:13px}}
+{% block css2 %}{% endblock %}
+{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="wrap-wide in">
+    <div class="brand"><div class="mark">C</div><div>Encuesta de Transporte<small>Panel administrativo · Colombina</small></div></div>
+    <nav class="nav">
+      <a href="{{ url_for('admin') }}" class="{{ 'on' if request.endpoint=='admin' }}">Tablero</a>
+      <a href="{{ url_for('admin_respuestas') }}" class="{{ 'on' if request.endpoint=='admin_respuestas' }}">Respuestas</a>
+      <a href="{{ url_for('configuracion') }}" class="{{ 'on' if request.endpoint=='configuracion' }}">Preguntas y rutas</a>
+      <a href="{{ url_for('admin_qr') }}" class="{{ 'on' if request.endpoint=='admin_qr' }}">Enlace y QR</a>
+      <a href="{{ url_for('logout') }}">Salir</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap-wide page">
+  {% with m = get_flashed_messages() %}{% for x in m %}<div class="flash">{{ x }}</div>{% endfor %}{% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer>Colombina S.A. · Área Administrativa y Financiera</footer>
+{% endblock %}
