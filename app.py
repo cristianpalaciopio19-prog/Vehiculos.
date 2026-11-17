@@ -82,7 +82,9 @@ def init_db():
         return
     try:
         with app.app_context():
-            q(SCHEMA, commit=True)
+            existe = q("select to_regclass('enc_respuestas') is not null as ok", one=True)
+            if not existe["ok"]:
+                q(SCHEMA, commit=True)
     except Exception as e:  # no detener el arranque si la BD tarda en responder
         print("Aviso init_db:", e)
 
